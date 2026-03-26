@@ -1,4 +1,4 @@
-package com.kata.warehouse;
+package org.sammancoaching.warehouse;
 
 import java.util.ArrayList;
 import java.util.HashMap;

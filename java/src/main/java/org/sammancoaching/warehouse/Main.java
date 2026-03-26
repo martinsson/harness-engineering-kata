@@ -1,4 +1,4 @@
-package com.kata.warehouse;
+package org.sammancoaching.warehouse;
 
 public class Main {
     public static void main(String[] args) {
