@@ -1,18 +1,20 @@
 Const MAX_ITEMS = 100
 
-Sub InitDictInt(keys() As String, values() As Integer, ByRef count As Integer)
-    count = 0
-End Sub
+Type DictIntType
+    keys(MAX_ITEMS) As String
+    values(MAX_ITEMS) As Integer
+    count As Integer
 
-Sub InitDictDouble(keys() As String, values() As Double, ByRef count As Integer)
-    count = 0
-End Sub
+    Declare Constructor()
+    Declare Sub Set(key As String, value As Integer)
+    Declare Function Get(key As String, defaultValue As Integer) As Integer
+End Type
 
-Sub InitDictString(keys() As String, values() As String, ByRef count As Integer)
+Constructor DictIntType()
     count = 0
-End Sub
+End Constructor
 
-Sub DictSetInt(keys() As String, values() As Integer, ByRef count As Integer, key As String, value As Integer)
+Sub DictIntType.Set(key As String, value As Integer)
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -28,39 +30,7 @@ Sub DictSetInt(keys() As String, values() As Integer, ByRef count As Integer, ke
     End If
 End Sub
 
-Sub DictSetDouble(keys() As String, values() As Double, ByRef count As Integer, key As String, value As Double)
-    Dim i As Integer
-    For i = 0 To count - 1
-        If keys(i) = key Then
-            values(i) = value
-            Exit Sub
-        End If
-    Next i
-
-    If count < MAX_ITEMS Then
-        keys(count) = key
-        values(count) = value
-        count = count + 1
-    End If
-End Sub
-
-Sub DictSetString(keys() As String, values() As String, ByRef count As Integer, key As String, value As String)
-    Dim i As Integer
-    For i = 0 To count - 1
-        If keys(i) = key Then
-            values(i) = value
-            Exit Sub
-        End If
-    Next i
-
-    If count < MAX_ITEMS Then
-        keys(count) = key
-        values(count) = value
-        count = count + 1
-    End If
-End Sub
-
-Function DictGetInt(keys() As String, values() As Integer, count As Integer, key As String, defaultValue As Integer) As Integer
+Function DictIntType.Get(key As String, defaultValue As Integer) As Integer
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -70,7 +40,37 @@ Function DictGetInt(keys() As String, values() As Integer, count As Integer, key
     Return defaultValue
 End Function
 
-Function DictGetDouble(keys() As String, values() As Double, count As Integer, key As String, defaultValue As Double) As Double
+Type DictDoubleType
+    keys(MAX_ITEMS) As String
+    values(MAX_ITEMS) As Double
+    count As Integer
+
+    Declare Constructor()
+    Declare Sub Set(key As String, value As Double)
+    Declare Function Get(key As String, defaultValue As Double) As Double
+End Type
+
+Constructor DictDoubleType()
+    count = 0
+End Constructor
+
+Sub DictDoubleType.Set(key As String, value As Double)
+    Dim i As Integer
+    For i = 0 To count - 1
+        If keys(i) = key Then
+            values(i) = value
+            Exit Sub
+        End If
+    Next i
+
+    If count < MAX_ITEMS Then
+        keys(count) = key
+        values(count) = value
+        count = count + 1
+    End If
+End Sub
+
+Function DictDoubleType.Get(key As String, defaultValue As Double) As Double
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -80,7 +80,37 @@ Function DictGetDouble(keys() As String, values() As Double, count As Integer, k
     Return defaultValue
 End Function
 
-Function DictGetString(keys() As String, values() As String, count As Integer, key As String, defaultValue As String) As String
+Type DictStringType
+    keys(MAX_ITEMS) As String
+    values(MAX_ITEMS) As String
+    count As Integer
+
+    Declare Constructor()
+    Declare Sub Set(key As String, value As String)
+    Declare Function Get(key As String, defaultValue As String) As String
+End Type
+
+Constructor DictStringType()
+    count = 0
+End Constructor
+
+Sub DictStringType.Set(key As String, value As String)
+    Dim i As Integer
+    For i = 0 To count - 1
+        If keys(i) = key Then
+            values(i) = value
+            Exit Sub
+        End If
+    Next i
+
+    If count < MAX_ITEMS Then
+        keys(count) = key
+        values(count) = value
+        count = count + 1
+    End If
+End Sub
+
+Function DictStringType.Get(key As String, defaultValue As String) As String
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
