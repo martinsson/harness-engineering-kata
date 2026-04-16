@@ -1,0 +1,9 @@
+.vscode
+
+inc/*.bi
+lib/*.a
+
+**/*.o
+**/*.a
+**/*.obj
+**/*.exe
