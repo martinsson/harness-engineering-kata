@@ -7,6 +7,6 @@ See also [feature.md](../feature.md)
 ## Run the Demo Day
 
 ```bash
-fbc src/main.bas
-./main
+compile src/main.bas
+./src/main
 ```
