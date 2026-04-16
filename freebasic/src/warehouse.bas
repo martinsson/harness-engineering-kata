@@ -78,97 +78,89 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     cmd = parts(0)
 
     If cmd = "RECV" Then
-        If partCount >= 4 Then
-            Dim sku As String = parts(1)
-            Dim qty As Integer = Val(parts(2))
-            Dim unitCost As Double = Val(parts(3))
+        Dim sku As String = parts(1)
+        Dim qty As Integer = Val(parts(2))
+        Dim unitCost As Double = Val(parts(3))
 
-            Dim currentStock As Integer = stock.Get(sku, 0)
-            stock.Set(sku, currentStock + qty)
+        Dim currentStock As Integer = stock.Get(sku, 0)
+        stock.Set(sku, currentStock + qty)
 
-            cashBalance = cashBalance - (qty * unitCost)
-            AddEvent("received " + Str(qty) + " of " + sku + " at " + Str(unitCost))
-        End If
+        cashBalance = cashBalance - (qty * unitCost)
+        AddEvent("received " + Str(qty) + " of " + sku + " at " + Str(unitCost))
         Exit Sub
     End If
 
     If cmd = "SELL" Then
-        If partCount >= 4 Then
-            Dim customer As String = parts(1)
-            Dim sku As String = parts(2)
-            Dim qty As Integer = Val(parts(3))
-            Dim orderId As String = "O" + Str(nextOrderNumber)
+        Dim customer As String = parts(1)
+        Dim sku As String = parts(2)
+        Dim qty As Integer = Val(parts(3))
+        Dim orderId As String = "O" + Str(nextOrderNumber)
 
-            nextOrderNumber = nextOrderNumber + 1
+        nextOrderNumber = nextOrderNumber + 1
 
-            orderSku.Set(orderId, sku)
-            orderQty.Set(orderId, qty)
+        orderSku.Set(orderId, sku)
+        orderQty.Set(orderId, qty)
 
-            Dim onHand As Integer = stock.Get(sku, 0)
-            Dim reservedQty As Integer = reserved.Get(sku, 0)
-            Dim available As Integer = onHand - reservedQty
+        Dim onHand As Integer = stock.Get(sku, 0)
+        Dim reservedQty As Integer = reserved.Get(sku, 0)
+        Dim available As Integer = onHand - reservedQty
 
-            If available < qty Then
-                orderStatus.Set(orderId, "BACKORDER")
-                AddEvent("order " + orderId + " backordered for " + customer + " sku=" + sku + " qty=" + Str(qty))
-            Else
-                stock.Set(sku, onHand - qty)
+        If available < qty Then
+            orderStatus.Set(orderId, "BACKORDER")
+            AddEvent("order " + orderId + " backordered for " + customer + " sku=" + sku + " qty=" + Str(qty))
+        Else
+            stock.Set(sku, onHand - qty)
 
-                Dim orderTotal As Double = price.Get(sku, 0.0) * qty
-                cashBalance = cashBalance + orderTotal
+            Dim orderTotal As Double = price.Get(sku, 0.0) * qty
+            cashBalance = cashBalance + orderTotal
 
-                orderStatus.Set(orderId, "SHIPPED")
-                AddEvent("order " + orderId + " shipped to " + customer + " amount=" + Str(orderTotal))
-            End If
+            orderStatus.Set(orderId, "SHIPPED")
+            AddEvent("order " + orderId + " shipped to " + customer + " amount=" + Str(orderTotal))
         End If
         Exit Sub
     End If
 
     If cmd = "CANCEL" Then
-        If partCount >= 2 Then
-            Dim orderId As String = parts(1)
-            Dim status As String = orderStatus.Get(orderId, "")
+        Dim orderId As String = parts(1)
+        Dim status As String = orderStatus.Get(orderId, "")
 
-            If status = "" Then
-                AddEvent("cannot cancel " + orderId + " because it does not exist")
-                Exit Sub
-            End If
-
-            If status = "BACKORDER" Then
-                orderStatus.Set(orderId, "CANCELLED")
-                AddEvent("cancelled backorder " + orderId)
-                Exit Sub
-            End If
-
-            If status = "SHIPPED" Then
-                Dim sku As String = orderSku.Get(orderId, "")
-                Dim qty As Integer = orderQty.Get(orderId, 0)
-
-                Dim currentStock As Integer = stock.Get(sku, 0)
-                stock.Set(sku, currentStock + qty)
-
-                Dim priceVal As Double = price.Get(sku, 0.0)
-                cashBalance = cashBalance - (priceVal * qty)
-
-                orderStatus.Set(orderId, "CANCELLED_AFTER_SHIP")
-                AddEvent("cancelled shipped order " + orderId + " with restock")
-                Exit Sub
-            End If
-
-            AddEvent("order " + orderId + " could not be cancelled from state " + status)
+        If status = "" Then
+            AddEvent("cannot cancel " + orderId + " because it does not exist")
+            Exit Sub
         End If
+
+        If status = "BACKORDER" Then
+            orderStatus.Set(orderId, "CANCELLED")
+            AddEvent("cancelled backorder " + orderId)
+            Exit Sub
+        End If
+
+        If status = "SHIPPED" Then
+            Dim sku As String = orderSku.Get(orderId, "")
+            Dim qty As Integer = orderQty.Get(orderId, 0)
+
+            Dim currentStock As Integer = stock.Get(sku, 0)
+            stock.Set(sku, currentStock + qty)
+
+            Dim priceVal As Double = price.Get(sku, 0.0)
+            cashBalance = cashBalance - (priceVal * qty)
+
+            orderStatus.Set(orderId, "CANCELLED_AFTER_SHIP")
+            AddEvent("cancelled shipped order " + orderId + " with restock")
+            Exit Sub
+        End If
+
+        AddEvent("order " + orderId + " could not be cancelled from state " + status)
         Exit Sub
     End If
 
     If cmd = "COUNT" Then
-        If partCount >= 2 Then
-            Dim sku As String = parts(1)
-            Dim onHand As Integer = stock.Get(sku, 0)
-            Dim reservedQty As Integer = reserved.Get(sku, 0)
-            Dim available As Integer = onHand - reservedQty
+        Dim sku As String = parts(1)
+        Dim onHand As Integer = stock.Get(sku, 0)
+        Dim reservedQty As Integer = reserved.Get(sku, 0)
+        Dim available As Integer = onHand - reservedQty
 
-            AddEvent("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reservedQty) + " available=" + Str(available))
-        End If
+        AddEvent("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reservedQty) + " available=" + Str(available))
         Exit Sub
     End If
 
@@ -211,7 +203,7 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
             shipped = shipped + 1
         ElseIf status = "BACKORDER" Then
             backorder = backorder + 1
-        ElseIf Left(status, 8) = "CANCELLED" Then
+        ElseIf Left(status, 9) = "CANCELLED" Then
             cancelled = cancelled + 1
         End If
     Next i
