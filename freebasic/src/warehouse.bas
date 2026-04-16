@@ -1,29 +1,12 @@
 #include "dict.bas"
 
 Type WarehouseDeskApp
-    stock(MAX_ITEMS) As Integer
-    stockKeys(MAX_ITEMS) As String
-    stockCount As Integer
-
-    reserved(MAX_ITEMS) As Integer
-    reservedKeys(MAX_ITEMS) As String
-    reservedCount As Integer
-
-    price(MAX_ITEMS) As Double
-    priceKeys(MAX_ITEMS) As String
-    priceCount As Integer
-
-    orderStatus(MAX_ITEMS) As String
-    orderStatusKeys(MAX_ITEMS) As String
-    orderStatusCount As Integer
-
-    orderSku(MAX_ITEMS) As String
-    orderSkuKeys(MAX_ITEMS) As String
-    orderSkuCount As Integer
-
-    orderQty(MAX_ITEMS) As Integer
-    orderQtyKeys(MAX_ITEMS) As String
-    orderQtyCount As Integer
+    stock As DictIntType
+    reserved As DictIntType
+    price As DictDoubleType
+    orderStatus As DictStringType
+    orderSku As DictStringType
+    orderQty As DictIntType
 
     eventLog(MAX_ITEMS) As String
     eventLogCount As Integer
@@ -33,19 +16,13 @@ Type WarehouseDeskApp
 
     Declare Constructor()
     Declare Sub SeedData()
-    Declare Sub RunDemoDay()
     Declare Sub ProcessLine(cmdLine As String)
     Declare Sub PrintEndOfDayReport()
+    Declare Sub RunDemoDay()
     Declare Sub AddEvent(eventText As String)
 End Type
 
 Constructor WarehouseDeskApp()
-    InitDictInt(stockKeys(), stock(), stockCount)
-    InitDictInt(reservedKeys(), reserved(), reservedCount)
-    InitDictDouble(priceKeys(), price(), priceCount)
-    InitDictString(orderStatusKeys(), orderStatus(), orderStatusCount)
-    InitDictString(orderSkuKeys(), orderSku(), orderSkuCount)
-    InitDictInt(orderQtyKeys(), orderQty(), orderQtyCount)
     eventLogCount = 0
 
     cashBalance = 0.0
@@ -53,45 +30,23 @@ Constructor WarehouseDeskApp()
 End Constructor
 
 Sub WarehouseDeskApp.SeedData()
-    DictSetInt(stockKeys(), stock(), stockCount, "PEN-BLACK", 40)
-    DictSetInt(stockKeys(), stock(), stockCount, "PEN-BLUE", 25)
-    DictSetInt(stockKeys(), stock(), stockCount, "NOTE-A5", 15)
-    DictSetInt(stockKeys(), stock(), stockCount, "STAPLER", 4)
+    stock.Set("PEN-BLACK", 40)
+    stock.Set("PEN-BLUE", 25)
+    stock.Set("NOTE-A5", 15)
+    stock.Set("STAPLER", 4)
 
-    DictSetInt(reservedKeys(), reserved(), reservedCount, "PEN-BLACK", 0)
-    DictSetInt(reservedKeys(), reserved(), reservedCount, "PEN-BLUE", 0)
-    DictSetInt(reservedKeys(), reserved(), reservedCount, "NOTE-A5", 0)
-    DictSetInt(reservedKeys(), reserved(), reservedCount, "STAPLER", 0)
+    reserved.Set("PEN-BLACK", 0)
+    reserved.Set("PEN-BLUE", 0)
+    reserved.Set("NOTE-A5", 0)
+    reserved.Set("STAPLER", 0)
 
-    DictSetDouble(priceKeys(), price(), priceCount, "PEN-BLACK", 1.5)
-    DictSetDouble(priceKeys(), price(), priceCount, "PEN-BLUE", 1.6)
-    DictSetDouble(priceKeys(), price(), priceCount, "NOTE-A5", 4.0)
-    DictSetDouble(priceKeys(), price(), priceCount, "STAPLER", 12.0)
+    price.Set("PEN-BLACK", 1.5)
+    price.Set("PEN-BLUE", 1.6)
+    price.Set("NOTE-A5", 4.0)
+    price.Set("STAPLER", 12.0)
 
     cashBalance = 300.0
     nextOrderNumber = 1001
-End Sub
-
-Sub WarehouseDeskApp.RunDemoDay()
-    Dim commands(10) As String
-    Dim commandCount As Integer = 9
-
-    commands(0) = "RECV;NOTE-A5;5;2.20"
-    commands(1) = "SELL;alice;PEN-BLACK;10"
-    commands(2) = "SELL;bob;STAPLER;5"
-    commands(3) = "CANCEL;O1002"
-    commands(4) = "COUNT;STAPLER"
-    commands(5) = "SELL;carol;STAPLER;2"
-    commands(6) = "SELL;dan;NOTE-A5;14"
-    commands(7) = "COUNT;NOTE-A5"
-    commands(8) = "DUMP"
-
-    Dim i As Integer
-    For i = 0 To commandCount - 1
-        ProcessLine(commands(i))
-    Next i
-
-    PrintEndOfDayReport()
 End Sub
 
 Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
@@ -119,6 +74,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         partCount = partCount + 1
     End If
 
+    If partCount = 0 Then Exit Sub
     cmd = parts(0)
 
     If cmd = "RECV" Then
@@ -127,8 +83,8 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
             Dim qty As Integer = Val(parts(2))
             Dim unitCost As Double = Val(parts(3))
 
-            Dim currentStock As Integer = DictGetInt(stockKeys(), stock(), stockCount, sku, 0)
-            DictSetInt(stockKeys(), stock(), stockCount, sku, currentStock + qty)
+            Dim currentStock As Integer = stock.Get(sku, 0)
+            stock.Set(sku, currentStock + qty)
 
             cashBalance = cashBalance - (qty * unitCost)
             AddEvent("received " + Str(qty) + " of " + sku + " at " + Str(unitCost))
@@ -145,23 +101,23 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
 
             nextOrderNumber = nextOrderNumber + 1
 
-            DictSetString(orderSkuKeys(), orderSku(), orderSkuCount, orderId, sku)
-            DictSetInt(orderQtyKeys(), orderQty(), orderQtyCount, orderId, qty)
+            orderSku.Set(orderId, sku)
+            orderQty.Set(orderId, qty)
 
-            Dim onHand As Integer = DictGetInt(stockKeys(), stock(), stockCount, sku, 0)
-            Dim reserved As Integer = DictGetInt(reservedKeys(), reserved, reservedCount, sku, 0)
-            Dim available As Integer = onHand - reserved
+            Dim onHand As Integer = stock.Get(sku, 0)
+            Dim reservedQty As Integer = reserved.Get(sku, 0)
+            Dim available As Integer = onHand - reservedQty
 
             If available < qty Then
-                DictSetString(orderStatusKeys(), orderStatus(), orderStatusCount, orderId, "BACKORDER")
+                orderStatus.Set(orderId, "BACKORDER")
                 AddEvent("order " + orderId + " backordered for " + customer + " sku=" + sku + " qty=" + Str(qty))
             Else
-                DictSetInt(stockKeys(), stock(), stockCount, sku, onHand - qty)
+                stock.Set(sku, onHand - qty)
 
-                Dim orderTotal As Double = DictGetDouble(priceKeys(), price(), priceCount, sku, 0.0) * qty
+                Dim orderTotal As Double = price.Get(sku, 0.0) * qty
                 cashBalance = cashBalance + orderTotal
 
-                DictSetString(orderStatusKeys(), orderStatus(), orderStatusCount, orderId, "SHIPPED")
+                orderStatus.Set(orderId, "SHIPPED")
                 AddEvent("order " + orderId + " shipped to " + customer + " amount=" + Str(orderTotal))
             End If
         End If
@@ -171,7 +127,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     If cmd = "CANCEL" Then
         If partCount >= 2 Then
             Dim orderId As String = parts(1)
-            Dim status As String = DictGetString(orderStatusKeys(), orderStatus(), orderStatusCount, orderId, "")
+            Dim status As String = orderStatus.Get(orderId, "")
 
             If status = "" Then
                 AddEvent("cannot cancel " + orderId + " because it does not exist")
@@ -179,22 +135,22 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
             End If
 
             If status = "BACKORDER" Then
-                DictSetString(orderStatusKeys(), orderStatus(), orderStatusCount, orderId, "CANCELLED")
+                orderStatus.Set(orderId, "CANCELLED")
                 AddEvent("cancelled backorder " + orderId)
                 Exit Sub
             End If
 
             If status = "SHIPPED" Then
-                Dim sku As String = DictGetString(orderSkuKeys(), orderSku(), orderSkuCount, orderId, "")
-                Dim qty As Integer = DictGetInt(orderQtyKeys(), orderQty(), orderQtyCount, orderId, 0)
+                Dim sku As String = orderSku.Get(orderId, "")
+                Dim qty As Integer = orderQty.Get(orderId, 0)
 
-                Dim currentStock As Integer = DictGetInt(stockKeys(), stock(), stockCount, sku, 0)
-                DictSetInt(stockKeys(), stock(), stockCount, sku, currentStock + qty)
+                Dim currentStock As Integer = stock.Get(sku, 0)
+                stock.Set(sku, currentStock + qty)
 
-                Dim price As Double = DictGetDouble(priceKeys(), price, priceCount, sku, 0.0)
-                cashBalance = cashBalance - (price * qty)
+                Dim priceVal As Double = price.Get(sku, 0.0)
+                cashBalance = cashBalance - (priceVal * qty)
 
-                DictSetString(orderStatusKeys(), orderStatus(), orderStatusCount, orderId, "CANCELLED_AFTER_SHIP")
+                orderStatus.Set(orderId, "CANCELLED_AFTER_SHIP")
                 AddEvent("cancelled shipped order " + orderId + " with restock")
                 Exit Sub
             End If
@@ -207,11 +163,11 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     If cmd = "COUNT" Then
         If partCount >= 2 Then
             Dim sku As String = parts(1)
-            Dim onHand As Integer = DictGetInt(stockKeys(), stock(), stockCount, sku, 0)
-            Dim reserved As Integer = DictGetInt(reservedKeys(), reserved(), reservedCount, sku, 0)
-            Dim available As Integer = onHand - reserved
+            Dim onHand As Integer = stock.Get(sku, 0)
+            Dim reservedQty As Integer = reserved.Get(sku, 0)
+            Dim available As Integer = onHand - reservedQty
 
-            AddEvent("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reserved) + " available=" + Str(available))
+            AddEvent("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reservedQty) + " available=" + Str(available))
         End If
         Exit Sub
     End If
@@ -219,20 +175,20 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     If cmd = "DUMP" Then
         Print "---- dump ----"
         Print "stock=";
-        For i = 0 To stockCount - 1
-            Print stockKeys(i) + "=" + Str(stock(i)) + " ";
+        For i = 0 To stock.count - 1
+            Print stock.keys(i) + "=" + Str(stock.values(i)) + " ";
         Next i
         Print
 
         Print "reserved=";
-        For i = 0 To reservedCount - 1
-            Print reservedKeys(i) + "=" + Str(reserved(i)) + " ";
+        For i = 0 To reserved.count - 1
+            Print reserved.keys(i) + "=" + Str(reserved.values(i)) + " ";
         Next i
         Print
 
         Print "orders=";
-        For i = 0 To orderStatusCount - 1
-            Print orderStatusKeys(i) + "=" + orderStatus(i) + " ";
+        For i = 0 To orderStatus.count - 1
+            Print orderStatus.keys(i) + "=" + orderStatus.values(i) + " ";
         Next i
         Print
 
@@ -249,8 +205,8 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
     Dim cancelled As Integer = 0
     Dim i As Integer
 
-    For i = 0 To orderStatusCount - 1
-        Dim status As String = orderStatus(i)
+    For i = 0 To orderStatus.count - 1
+        Dim status As String = orderStatus.values(i)
         If status = "SHIPPED" Then
             shipped = shipped + 1
         ElseIf status = "BACKORDER" Then
@@ -262,9 +218,9 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
 
     Dim lowStock(MAX_ITEMS) As String
     Dim lowStockCount As Integer = 0
-    For i = 0 To stockCount - 1
-        If stock(i) < 5 Then
-            lowStock(lowStockCount) = stockKeys(i)
+    For i = 0 To stock.count - 1
+        If stock.values(i) < 5 Then
+            lowStock(lowStockCount) = stock.keys(i)
             lowStockCount = lowStockCount + 1
         End If
     Next i
@@ -284,6 +240,27 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
     For i = 0 To eventLogCount - 1
         Print " - " + eventLog(i)
     Next i
+End Sub
+
+Sub WarehouseDeskApp.RunDemoDay()
+    Dim commands(10) As String
+    Dim commandCount As Integer = 9
+
+    commands(0) = "RECV;NOTE-A5;5;2.20"
+    commands(1) = "SELL;alice;PEN-BLACK;10"
+    commands(2) = "SELL;bob;STAPLER;5"
+    commands(3) = "CANCEL;O1002"
+    commands(4) = "COUNT;STAPLER"
+    commands(5) = "SELL;carol;STAPLER;2"
+    commands(6) = "SELL;dan;NOTE-A5;14"
+    commands(7) = "COUNT;NOTE-A5"
+    commands(8) = "DUMP"
+
+    Dim i As Integer
+    For i = 0 To commandCount - 1
+        ProcessLine(commands(i))
+    Next i
+    PrintEndOfDayReport()
 End Sub
 
 Sub WarehouseDeskApp.AddEvent(eventText As String)
