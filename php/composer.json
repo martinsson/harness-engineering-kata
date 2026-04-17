@@ -1,0 +1,27 @@
+{
+    "name": "sammancoaching.org/warehouse-desk-kata",
+    "type": "project",
+    "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Warehouse\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WarehouseTest\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    },
+    "scripts": {
+        "main": "php main.php"
+    }
+}
