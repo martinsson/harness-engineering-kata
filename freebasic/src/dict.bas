@@ -1,20 +1,23 @@
-Const MAX_ITEMS = 100
 
-Type DictIntType
-    keys(MAX_ITEMS) As String
-    values(MAX_ITEMS) As Integer
-    count As Integer
+Type IntegerDict
+    private:
+        Const MAX_ITEMS = 100
+    public:
+        keys(MAX_ITEMS) As String
+        values(MAX_ITEMS) As Integer
+        count As Integer
 
-    Declare Constructor()
-    Declare Sub Set(key As String, value As Integer)
-    Declare Function Get(key As String, defaultValue As Integer) As Integer
+        Declare Constructor()
+        Declare Sub Set(key As String, value As Integer)
+        Declare Function Get(key As String, defaultValue As Integer) As Integer
+        Declare Sub PrintKeyValues()
 End Type
 
-Constructor DictIntType()
+Constructor IntegerDict()
     count = 0
 End Constructor
 
-Sub DictIntType.Set(key As String, value As Integer)
+Sub IntegerDict.Set(key As String, value As Integer)
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -30,7 +33,7 @@ Sub DictIntType.Set(key As String, value As Integer)
     End If
 End Sub
 
-Function DictIntType.Get(key As String, defaultValue As Integer) As Integer
+Function IntegerDict.Get(key As String, defaultValue As Integer) As Integer
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -40,21 +43,33 @@ Function DictIntType.Get(key As String, defaultValue As Integer) As Integer
     Return defaultValue
 End Function
 
-Type DictDoubleType
-    keys(MAX_ITEMS) As String
-    values(MAX_ITEMS) As Double
-    count As Integer
+Sub IntegerDict.PrintKeyValues()
+    Dim i As Integer
+    For i = 0 To count - 1
+        Print keys(i) + "=" + Str(values(i)) + " ";
+    Next i
+    Print
+End Sub
 
-    Declare Constructor()
-    Declare Sub Set(key As String, value As Double)
-    Declare Function Get(key As String, defaultValue As Double) As Double
+Type DoubleDict
+    private:
+        Const MAX_ITEMS = 100
+        keys(MAX_ITEMS) As String
+        values(MAX_ITEMS) As Double
+        count As Integer
+
+    public:
+        Declare Constructor()
+        Declare Sub Set(key As String, value As Double)
+        Declare Function Get(key As String, defaultValue As Double) As Double
+        Declare Sub PrintKeyValues()
 End Type
 
-Constructor DictDoubleType()
+Constructor DoubleDict()
     count = 0
 End Constructor
 
-Sub DictDoubleType.Set(key As String, value As Double)
+Sub DoubleDict.Set(key As String, value As Double)
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -70,7 +85,7 @@ Sub DictDoubleType.Set(key As String, value As Double)
     End If
 End Sub
 
-Function DictDoubleType.Get(key As String, defaultValue As Double) As Double
+Function DoubleDict.Get(key As String, defaultValue As Double) As Double
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -80,21 +95,33 @@ Function DictDoubleType.Get(key As String, defaultValue As Double) As Double
     Return defaultValue
 End Function
 
-Type DictStringType
-    keys(MAX_ITEMS) As String
-    values(MAX_ITEMS) As String
-    count As Integer
+Sub DoubleDict.PrintKeyValues()
+    Dim i As Integer
+    For i = 0 To count - 1
+        Print keys(i) + "=" + Str(values(i)) + " ";
+    Next i
+    Print
+End Sub
 
-    Declare Constructor()
-    Declare Sub Set(key As String, value As String)
-    Declare Function Get(key As String, defaultValue As String) As String
+Type StringDict
+    private:
+        Const MAX_ITEMS = 100
+    public:
+        keys(MAX_ITEMS) As String
+        values(MAX_ITEMS) As String
+        count As Integer
+
+        Declare Constructor()
+        Declare Sub Set(key As String, value As String)
+        Declare Function Get(key As String, defaultValue As String) As String
+        Declare Sub PrintKeyValues()
 End Type
 
-Constructor DictStringType()
+Constructor StringDict()
     count = 0
 End Constructor
 
-Sub DictStringType.Set(key As String, value As String)
+Sub StringDict.Set(key As String, value As String)
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -110,7 +137,7 @@ Sub DictStringType.Set(key As String, value As String)
     End If
 End Sub
 
-Function DictStringType.Get(key As String, defaultValue As String) As String
+Function StringDict.Get(key As String, defaultValue As String) As String
     Dim i As Integer
     For i = 0 To count - 1
         If keys(i) = key Then
@@ -119,3 +146,11 @@ Function DictStringType.Get(key As String, defaultValue As String) As String
     Next i
     Return defaultValue
 End Function
+
+Sub StringDict.PrintKeyValues()
+    Dim i As Integer
+    For i = 0 To count - 1
+        Print keys(i) + "=" + values(i) + " ";
+    Next i
+    Print
+End Sub
