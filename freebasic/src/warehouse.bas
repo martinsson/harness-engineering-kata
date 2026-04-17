@@ -9,24 +9,17 @@ Type WarehouseDeskApp
         orderStatus As StringDict
         orderSku As StringDict
         orderQty As IntegerDict
-
         eventLog As StringList
-
         cashBalance As Double
         nextOrderNumber As Integer
 
     public:
-        Declare Constructor()
         Declare Sub SeedData()
         Declare Sub ProcessLine(cmdLine As String)
         Declare Sub PrintEndOfDayReport()
         Declare Sub RunDemoDay()
+        Declare Function Split(text As String, delimiter As String) As StringList
 End Type
-
-Constructor WarehouseDeskApp()
-    cashBalance = 0.0
-    nextOrderNumber = 1001
-End Constructor
 
 Sub WarehouseDeskApp.SeedData()
     stock.Set("PEN-BLACK", 40)
@@ -48,38 +41,33 @@ Sub WarehouseDeskApp.SeedData()
     nextOrderNumber = 1001
 End Sub
 
-Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
-    Dim parts(10) As String
-    Dim partCount As Integer
+Function WarehouseDeskApp.Split(text As String, delimiter As String) As StringList
     Dim i As Integer
-    Dim cmd As String
-
-    partCount = 0
     Dim tempStr As String = ""
-    For i = 1 To Len(cmdLine)
-        Dim c As String = Mid(cmdLine, i, 1)
-        If c = ";" Then
-            If partCount < 10 Then
-                parts(partCount) = tempStr
-                partCount = partCount + 1
-            End If
+    Dim result As StringList
+
+    For i = 1 To Len(text)
+        Dim c As String = Mid(text, i, 1)
+        If c = delimiter Then
+            result.Add(tempStr)
             tempStr = ""
         Else
             tempStr = tempStr + c
         End If
     Next i
-    If partCount < 10 Then
-        parts(partCount) = tempStr
-        partCount = partCount + 1
-    End If
+    result.Add(tempStr)
 
-    If partCount = 0 Then Exit Sub
-    cmd = parts(0)
+    Return result
+End Function
+
+Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
+    Dim parts As StringList = Split(cmdLine, ";")
+    Dim cmd As String = parts.Get(0)
 
     If cmd = "RECV" Then
-        Dim sku As String = parts(1)
-        Dim qty As Integer = Val(parts(2))
-        Dim unitCost As Double = Val(parts(3))
+        Dim sku As String = parts.Get(1)
+        Dim qty As Integer = Val(parts.Get(2))
+        Dim unitCost As Double = Val(parts.Get(3))
 
         Dim currentStock As Integer = stock.Get(sku, 0)
         stock.Set(sku, currentStock + qty)
@@ -90,29 +78,24 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     End If
 
     If cmd = "SELL" Then
-        Dim customer As String = parts(1)
-        Dim sku As String = parts(2)
-        Dim qty As Integer = Val(parts(3))
+        Dim customer As String = parts.Get(1)
+        Dim sku As String = parts.Get(2)
+        Dim qty As Integer = Val(parts.Get(3))
         Dim orderId As String = "O" + Str(nextOrderNumber)
-
         nextOrderNumber = nextOrderNumber + 1
-
         orderSku.Set(orderId, sku)
         orderQty.Set(orderId, qty)
 
         Dim onHand As Integer = stock.Get(sku, 0)
         Dim reservedQty As Integer = reserved.Get(sku, 0)
         Dim available As Integer = onHand - reservedQty
-
         If available < qty Then
             orderStatus.Set(orderId, "BACKORDER")
             eventLog.Add("order " + orderId + " backordered for " + customer + " sku=" + sku + " qty=" + Str(qty))
         Else
             stock.Set(sku, onHand - qty)
-
             Dim orderTotal As Double = price.Get(sku, 0.0) * qty
             cashBalance = cashBalance + orderTotal
-
             orderStatus.Set(orderId, "SHIPPED")
             eventLog.Add("order " + orderId + " shipped to " + customer + " amount=" + Str(orderTotal))
         End If
@@ -120,9 +103,8 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     End If
 
     If cmd = "CANCEL" Then
-        Dim orderId As String = parts(1)
+        Dim orderId As String = parts.Get(1)
         Dim status As String = orderStatus.Get(orderId, "")
-
         If status = "" Then
             eventLog.Add("cannot cancel " + orderId + " because it does not exist")
             Exit Sub
@@ -137,13 +119,10 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         If status = "SHIPPED" Then
             Dim sku As String = orderSku.Get(orderId, "")
             Dim qty As Integer = orderQty.Get(orderId, 0)
-
             Dim currentStock As Integer = stock.Get(sku, 0)
             stock.Set(sku, currentStock + qty)
-
             Dim priceVal As Double = price.Get(sku, 0.0)
             cashBalance = cashBalance - (priceVal * qty)
-
             orderStatus.Set(orderId, "CANCELLED_AFTER_SHIP")
             eventLog.Add("cancelled shipped order " + orderId + " with restock")
             Exit Sub
@@ -154,11 +133,10 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     End If
 
     If cmd = "COUNT" Then
-        Dim sku As String = parts(1)
+        Dim sku As String = parts.Get(1)
         Dim onHand As Integer = stock.Get(sku, 0)
         Dim reservedQty As Integer = reserved.Get(sku, 0)
         Dim available As Integer = onHand - reservedQty
-
         eventLog.Add("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reservedQty) + " available=" + Str(available))
         Exit Sub
     End If
@@ -167,13 +145,10 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         Print "---- dump ----"
         Print "stock=";
         stock.PrintKeyValues()
-
         Print "reserved=";
         reserved.PrintKeyValues()
-        
         Print "orders=";
         orderStatus.PrintKeyValues()
-
         Print "cashBalance=" + Str(cashBalance)
         Exit Sub
     End If
@@ -182,10 +157,10 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
 End Sub
 
 Sub WarehouseDeskApp.PrintEndOfDayReport()
+    Dim i As Integer
     Dim shipped As Integer = 0
     Dim backorder As Integer = 0
     Dim cancelled As Integer = 0
-    Dim i As Integer
 
     For i = 0 To orderStatus.count - 1
         Dim status As String = orderStatus.values(i)

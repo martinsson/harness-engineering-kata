@@ -7,6 +7,7 @@ Type StringList
     public:
         Declare Constructor()
         Declare Sub Add(item As String)
+        Declare Function Get(index As Integer) As String
         Declare Sub PrintItemsOneLine()
         Declare Sub PrintItems()
 End Type
@@ -21,6 +22,14 @@ Sub StringList.Add(item As String)
         count = count + 1
     End If
 End Sub
+
+Function StringList.Get(index As Integer) As String
+    If index >= 0 And index < count Then
+        Return items(index)
+    Else
+        Return ""
+    End If
+End Function
 
 Sub StringList.PrintItemsOneLine()
     Dim i As Integer
