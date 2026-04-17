@@ -1,4 +1,5 @@
 #include "dict.bas"
+#include "list.bas"
 
 Type WarehouseDeskApp
     stock As DictIntType
@@ -8,8 +9,7 @@ Type WarehouseDeskApp
     orderSku As DictStringType
     orderQty As DictIntType
 
-    eventLog(MAX_ITEMS) As String
-    eventLogCount As Integer
+    eventLog As StringList
 
     cashBalance As Double
     nextOrderNumber As Integer
@@ -19,12 +19,9 @@ Type WarehouseDeskApp
     Declare Sub ProcessLine(cmdLine As String)
     Declare Sub PrintEndOfDayReport()
     Declare Sub RunDemoDay()
-    Declare Sub AddEvent(eventText As String)
 End Type
 
 Constructor WarehouseDeskApp()
-    eventLogCount = 0
-
     cashBalance = 0.0
     nextOrderNumber = 1001
 End Constructor
@@ -86,7 +83,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         stock.Set(sku, currentStock + qty)
 
         cashBalance = cashBalance - (qty * unitCost)
-        AddEvent("received " + Str(qty) + " of " + sku + " at " + Str(unitCost))
+        eventLog.Add("received " + Str(qty) + " of " + sku + " at " + Str(unitCost))
         Exit Sub
     End If
 
@@ -107,7 +104,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
 
         If available < qty Then
             orderStatus.Set(orderId, "BACKORDER")
-            AddEvent("order " + orderId + " backordered for " + customer + " sku=" + sku + " qty=" + Str(qty))
+            eventLog.Add("order " + orderId + " backordered for " + customer + " sku=" + sku + " qty=" + Str(qty))
         Else
             stock.Set(sku, onHand - qty)
 
@@ -115,7 +112,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
             cashBalance = cashBalance + orderTotal
 
             orderStatus.Set(orderId, "SHIPPED")
-            AddEvent("order " + orderId + " shipped to " + customer + " amount=" + Str(orderTotal))
+            eventLog.Add("order " + orderId + " shipped to " + customer + " amount=" + Str(orderTotal))
         End If
         Exit Sub
     End If
@@ -125,13 +122,13 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         Dim status As String = orderStatus.Get(orderId, "")
 
         If status = "" Then
-            AddEvent("cannot cancel " + orderId + " because it does not exist")
+            eventLog.Add("cannot cancel " + orderId + " because it does not exist")
             Exit Sub
         End If
 
         If status = "BACKORDER" Then
             orderStatus.Set(orderId, "CANCELLED")
-            AddEvent("cancelled backorder " + orderId)
+            eventLog.Add("cancelled backorder " + orderId)
             Exit Sub
         End If
 
@@ -146,11 +143,11 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
             cashBalance = cashBalance - (priceVal * qty)
 
             orderStatus.Set(orderId, "CANCELLED_AFTER_SHIP")
-            AddEvent("cancelled shipped order " + orderId + " with restock")
+            eventLog.Add("cancelled shipped order " + orderId + " with restock")
             Exit Sub
         End If
 
-        AddEvent("order " + orderId + " could not be cancelled from state " + status)
+        eventLog.Add("order " + orderId + " could not be cancelled from state " + status)
         Exit Sub
     End If
 
@@ -160,7 +157,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         Dim reservedQty As Integer = reserved.Get(sku, 0)
         Dim available As Integer = onHand - reservedQty
 
-        AddEvent("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reservedQty) + " available=" + Str(available))
+        eventLog.Add("count " + sku + " onHand=" + Str(onHand) + " reserved=" + Str(reservedQty) + " available=" + Str(available))
         Exit Sub
     End If
 
@@ -188,7 +185,7 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
         Exit Sub
     End If
 
-    AddEvent("unknown command: " + cmdLine)
+    eventLog.Add("unknown command: " + cmdLine)
 End Sub
 
 Sub WarehouseDeskApp.PrintEndOfDayReport()
@@ -229,9 +226,7 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
     Next i
     Print
     Print "events:"
-    For i = 0 To eventLogCount - 1
-        Print " - " + eventLog(i)
-    Next i
+    eventLog.PrintItems()
 End Sub
 
 Sub WarehouseDeskApp.RunDemoDay()
@@ -255,9 +250,3 @@ Sub WarehouseDeskApp.RunDemoDay()
     PrintEndOfDayReport()
 End Sub
 
-Sub WarehouseDeskApp.AddEvent(eventText As String)
-    If eventLogCount < MAX_ITEMS Then
-        eventLog(eventLogCount) = eventText
-        eventLogCount = eventLogCount + 1
-    End If
-End Sub
