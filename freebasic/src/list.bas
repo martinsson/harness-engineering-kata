@@ -7,6 +7,7 @@ Type StringList
     public:
         Declare Constructor()
         Declare Sub Add(item As String)
+        Declare Sub PrintItemsOneLine()
         Declare Sub PrintItems()
 End Type
 
@@ -19,6 +20,13 @@ Sub StringList.Add(item As String)
         items(count) = item
         count = count + 1
     End If
+End Sub
+
+Sub StringList.PrintItemsOneLine()
+    Dim i As Integer
+    For i = 0 To count - 1
+        Print items(i) + " ";
+    Next i
 End Sub
 
 Sub StringList.PrintItems()

@@ -2,23 +2,25 @@
 #include "list.bas"
 
 Type WarehouseDeskApp
-    stock As DictIntType
-    reserved As DictIntType
-    price As DictDoubleType
-    orderStatus As DictStringType
-    orderSku As DictStringType
-    orderQty As DictIntType
+    private:
+        stock As IntegerDict
+        reserved As IntegerDict
+        price As DoubleDict
+        orderStatus As StringDict
+        orderSku As StringDict
+        orderQty As IntegerDict
 
-    eventLog As StringList
+        eventLog As StringList
 
-    cashBalance As Double
-    nextOrderNumber As Integer
+        cashBalance As Double
+        nextOrderNumber As Integer
 
-    Declare Constructor()
-    Declare Sub SeedData()
-    Declare Sub ProcessLine(cmdLine As String)
-    Declare Sub PrintEndOfDayReport()
-    Declare Sub RunDemoDay()
+    public:
+        Declare Constructor()
+        Declare Sub SeedData()
+        Declare Sub ProcessLine(cmdLine As String)
+        Declare Sub PrintEndOfDayReport()
+        Declare Sub RunDemoDay()
 End Type
 
 Constructor WarehouseDeskApp()
@@ -164,22 +166,13 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     If cmd = "DUMP" Then
         Print "---- dump ----"
         Print "stock=";
-        For i = 0 To stock.count - 1
-            Print stock.keys(i) + "=" + Str(stock.values(i)) + " ";
-        Next i
-        Print
+        stock.PrintKeyValues()
 
         Print "reserved=";
-        For i = 0 To reserved.count - 1
-            Print reserved.keys(i) + "=" + Str(reserved.values(i)) + " ";
-        Next i
-        Print
-
+        reserved.PrintKeyValues()
+        
         Print "orders=";
-        For i = 0 To orderStatus.count - 1
-            Print orderStatus.keys(i) + "=" + orderStatus.values(i) + " ";
-        Next i
-        Print
+        orderStatus.PrintKeyValues()
 
         Print "cashBalance=" + Str(cashBalance)
         Exit Sub
@@ -205,12 +198,10 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
         End If
     Next i
 
-    Dim lowStock(MAX_ITEMS) As String
-    Dim lowStockCount As Integer = 0
+    Dim lowStock As StringList
     For i = 0 To stock.count - 1
         If stock.values(i) < 5 Then
-            lowStock(lowStockCount) = stock.keys(i)
-            lowStockCount = lowStockCount + 1
+            lowStock.Add(stock.keys(i))
         End If
     Next i
 
@@ -221,9 +212,7 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
     Print "orders cancelled: " + Str(cancelled)
     Print "cash balance: " + Str(cashBalance)
     Print "low stock skus: ";
-    For i = 0 To lowStockCount - 1
-        Print lowStock(i) + " ";
-    Next i
+    lowStock.PrintItemsOneLine()
     Print
     Print "events:"
     eventLog.PrintItems()
