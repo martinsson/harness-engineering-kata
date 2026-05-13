@@ -37,6 +37,8 @@ For each step, throw away all code and get back to main, use this prompt, unless
 
     implement the feature from feature.md
 
+Steps 6 and 7 introduce setup changes (config files, hook scripts) that must persist across iterations while the agent's generated code is discarded. The workflow there is: run the `cp` commands, **commit and tag the setup**, then run the prompt. Between steps, hard-reset to the tagged setup commit — this drops the generated code while keeping the harness in place.
+
 ### 1. No Harness
 
   Start without any harness files, and do not create AGENTS.md or CLAUDE.md.
@@ -54,6 +56,8 @@ For each step, throw away all code and get back to main, use this prompt, unless
   Assume the initial code quality is weak, ask the agent to refactor repeatedly until you are reasonably satisfied, and then ask it to extract design principles from the conversation into a file such as
   docs/design-principles.md.
 
+  Commit the design principles, but revert the implementation and tests before proceeding to the next step 
+
 ### 5. Reuse Design Principles and Retry
 
   Reference docs/design-principles.md from AGENTS.md or CLAUDE.md, then restart from scratch and compare whether the resulting code is similar to the improved result from the first iteration.
@@ -62,6 +66,8 @@ For each step, throw away all code and get back to main, use this prompt, unless
 
   Activate a Stop hook that spawns a reviewer sub-agent after each agent turn. The reviewer runs the quality check script, reads offending code, and decides whether to block or allow.
 
+  If you're using Copilot or OpenCode you can replace the stop hook with a pre-commit hook and ask the agent to commit to provoke the feedback loop. Ask your agent to set that up and to test that it is being triggered on a dummy change.
+
   ```bash
   cp harness/step-6/settings.json .claude/settings.json
   cp harness/step-6/python/.flake8 python/.flake8
@@ -69,6 +75,9 @@ For each step, throw away all code and get back to main, use this prompt, unless
   mkdir -p .claude/hooks
   cp harness/step-6/.claude/hooks/*.sh .claude/hooks/
   chmod +x .claude/hooks/*.sh
+
+  git add -A && git commit -m "step 6 setup"
+  git tag -f step-6-setup
   ```
 
   Restart (exit) your Claude Code / Copilot session, then run the prompt.
@@ -77,9 +86,15 @@ For each step, throw away all code and get back to main, use this prompt, unless
 
   Replace the reviewer agent with a deterministic quality gate that runs the same checks as step 6, but enforces them via exit code 2 instead of agent judgement. Any violation blocks the agent from finishing, forcing it to iterate until the code is clean. This is the most effective technique found in the quality gate experiment (see [Discussion](#discussion)).
 
+  Start from step 6's setup — this drops the agent's generated code from step 6 but keeps the harness (`.flake8`, `checkstyle.xml`, hook scripts) in place:
+
   ```bash
+  git reset --hard step-6-setup
+
   cp harness/step-7/settings.json .claude/settings.json
-  # .flake8, checkstyle.xml, and the hook scripts should already be in place from step 6
+
+  git add -A && git commit -m "step 7 setup"
+  git tag -f step-7-setup
   ```
 
   Restart your Claude Code / Copilot session, then run the prompt.
