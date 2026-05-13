@@ -88,6 +88,10 @@ For each step, throw away all code and get back to main, use this prompt, unless
 
   Enable the agent to run the app in debug mode, introduce a bug, ask the agent to diagnose and fix it, and then extract that debugging workflow into a reusable skill added to the repository.
 
+### 10. Use a tool to criticize your tests 
+  E.g. Farley Score Plugin for Claude Code https://github.com/mse-online/farley_score_plugin
+Use the tool to criticize your tests and tell your agent to get to the maximum Farley Index of 10.
+
 
 ## Run
 
