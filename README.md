@@ -23,6 +23,13 @@ pip install -r python/requirements-dev.txt
 
 # Java — add checkstyle plugin to pom.xml (see "Quality tools by language" below)
 ```
+## Claude code (Optional)
+
+For a "fresh" clade code instance, set a "new" claude config dir
+```bash
+export CLAUDE_CONFIG_DIR=~/.claude_hek
+```
+_CLAUDE_CONFIG_DIR	Override the configuration directory (default: \~/.claude). All settings, credentials, session history, and plugins are stored under this path. Useful for running multiple accounts side by side: for example, alias claude-work='CLAUDE_CONFIG_DIR=\~/.claude-work claude'_ https://code.claude.com/docs/en/env-vars
 
 
 ## Steps
