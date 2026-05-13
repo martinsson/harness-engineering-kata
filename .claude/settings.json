@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You are a code quality reviewer. The main agent has just finished a response. Review source files for quality violations.\n\n1. Run the quality check script: \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-quality.sh\n2. For each violation reported, read the offending code and assess whether it genuinely needs refactoring.\n3. If there are real violations that should be fixed:\n   - Return decision 'block' with a specific, actionable reason: name the function or class, explain the problem, and suggest the refactoring (e.g. extract method X, split class Y, introduce constant Z).\n4. If the script reports no violations, or violations are minor/unavoidable:\n   - Return decision 'allow'.\n\nBe specific and constructive. Do not block for trivial issues.",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+[flake8]
+max-line-length = 120
+
+# Function limits (flake8-functions)
+max-function-length = 30
+max-returns-amount = 3
+max-parameters-amount = 4
+
+# Cognitive complexity (flake8-cognitive-complexity)
+max-cognitive-complexity = 10
+
+# Class and module limits (wemake-python-styleguide)
+max-attributes = 6
+max-arguments = 4
+max-local-variables = 7
+max-string-usages = 3
+
+# Only enable rules we care about — avoid WPS noise
+select =
+    # flake8-functions: function length, returns
+    CFQ001,CFQ004,
+    # cognitive complexity
+    CCR001,
+    # wemake: magic numbers, string overuse, too many args/attrs/locals/returns/expressions
+    WPS211,WPS226,WPS230,WPS210,WPS212,WPS213,
+    # wemake: magic floats/ints
+    WPS432,WPS358,
+    # flake8-simplify: conditional simplification
+    SIM,
+    # standard flake8: imports, syntax
+    F,E9
