@@ -60,25 +60,29 @@ For each step, throw away all code and get back to main, use this prompt, unless
 
 ### 6. Add a Code Quality Gate via Stop Hook (Reviewer Agent)
 
-  Activate a Stop hook that spawns a reviewer sub-agent after each agent turn. The reviewer runs the linter, reads offending functions, and decides whether to block or allow.
+  Activate a Stop hook that spawns a reviewer sub-agent after each agent turn. The reviewer runs the quality check script, reads offending code, and decides whether to block or allow.
 
   ```bash
   cp harness/step-6/settings.json .claude/settings.json
+  cp harness/step-6/python/.flake8 python/.flake8
+  cp harness/step-6/java/checkstyle.xml java/checkstyle.xml
+  mkdir -p .claude/hooks
+  cp harness/step-6/.claude/hooks/*.sh .claude/hooks/
+  chmod +x .claude/hooks/*.sh
   ```
 
-  Restart your Claude Code / Copilot session, then run the prompt.
+  Restart (exit) your Claude Code / Copilot session, then run the prompt.
 
 ### 7. Add a Mechanical Quality Gate via Stop Hook (Hard Block)
 
-  Replace the reviewer agent with a deterministic quality gate. The Stop hook runs a linter and custom checks — if any violation exists, exit code 2 blocks the agent from finishing. The agent is forced to iterate until the code is clean. This is the most effective technique found in the quality gate experiment (see [Discussion](#discussion)).
+  Replace the reviewer agent with a deterministic quality gate that runs the same checks as step 6, but enforces them via exit code 2 instead of agent judgement. Any violation blocks the agent from finishing, forcing it to iterate until the code is clean. This is the most effective technique found in the quality gate experiment (see [Discussion](#discussion)).
 
   ```bash
   cp harness/step-7/settings.json .claude/settings.json
+  # .flake8, checkstyle.xml, and the hook scripts should already be in place from step 6
   ```
 
   Restart your Claude Code / Copilot session, then run the prompt.
-
-  The hook scripts (`.claude/hooks/stop-quality-gate.sh`, `.claude/hooks/check-quality.sh`) and linter config (`python/.flake8`) are already in the repo — the settings file above activates them.
 
 ### 8. Add a TDD Skill Through Research and Reapplication
 
@@ -111,11 +115,11 @@ python main.py
 
 ### Python
 
-Configured in `python/.flake8` and `.claude/hooks/check-quality.sh`. Checks: function length (30), cognitive complexity (10), magic numbers, string constant overuse, class instance attributes (6), file length (150 lines), max parameters (4).
+Configured in `harness/step-6/.claude/hooks/check-quality.sh`. Checks: function length (30), cognitive complexity (10), magic numbers, string constant overuse, class instance attributes (6), file length (150 lines), max parameters (4). The flake8 config is in `harness/step-6/python/.flake8`. Both are copied into place when activating step 6 (see step 6 instructions above).
 
 ### Java
 
-Use [Checkstyle](https://checkstyle.org/) for the same checks. A starter `checkstyle.xml` covering method length, parameter count, cyclomatic complexity, magic numbers, string literals, and file length is in `java/checkstyle.xml`. Add the maven-checkstyle-plugin to `pom.xml` and adapt `.claude/hooks/stop-quality-gate.sh` to call `mvn -q checkstyle:check`.
+Use [Checkstyle](https://checkstyle.org/) for the same checks. A starter `checkstyle.xml` covering method length, parameter count, cyclomatic complexity, magic numbers, string literals, and file length is in `harness/step-6/java/checkstyle.xml` — copied into place when activating step 6. Add the maven-checkstyle-plugin to `pom.xml` and adapt `harness/step-6/.claude/hooks/check-quality.sh` to also call `mvn -q checkstyle:check`.
 
 [ArchUnit](https://www.archunit.org/) can additionally enforce architectural constraints (package dependencies, layer separation) as executable tests.
 
