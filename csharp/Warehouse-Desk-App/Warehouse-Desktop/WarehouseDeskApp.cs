@@ -181,7 +181,7 @@ namespace Warehouse_Desktop
 
         private double ParseDouble(string value)
         {
-            return double.Parse(value.Trim());
+            return double.Parse(value.Trim(), System.Globalization.CultureInfo.InvariantCulture);
         }
 
         public void PrintEndOfDayReport()
