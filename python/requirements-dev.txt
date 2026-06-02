@@ -1,0 +1,8 @@
+radon
+xenon
+flake8
+flake8-functions
+flake8-cognitive-complexity
+flake8-bugbear
+flake8-simplify
+wemake-python-styleguide
