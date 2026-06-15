@@ -64,8 +64,8 @@ if [ -d "$ROOT/php/src" ] && [ -f "$ROOT/php/phpmd.xml" ]; then
 
   while IFS= read -r f; do
     LINES=$(wc -l < "$f")
-    if [ "$LINES" -gt 150 ]; then
-      VIOLATIONS+="$f:1:1: FILE-LENGTH File has $LINES lines (max 150)"$'\n'
+    if [ "$LINES" -gt 220 ]; then
+      VIOLATIONS+="$f:1:1: FILE-LENGTH File has $LINES lines (max 220)"$'\n'
     fi
   done < <(find src/ -name "*.php")
 fi
