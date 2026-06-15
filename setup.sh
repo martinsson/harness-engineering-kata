@@ -61,7 +61,11 @@ esac
 # Step 6 uses a reviewer agent stop hook
 cp harness/step-6/settings.json .claude/settings.json
 
-git add -A
+git add .claude/settings.json .claude/hooks/
+case "$LANG" in
+  php)        git add php/phpmd.xml ;;
+  typescript) git add typescript/.eslintrc.json ;;
+esac
 git commit -m "step 6 setup ($LANG)"
 git tag -f step-6-setup
 echo "Tagged: step-6-setup"
@@ -72,7 +76,7 @@ echo "--- Switching to step 7 mechanical gate ---"
 
 cp harness/step-7/settings.json .claude/settings.json
 
-git add -A
+git add .claude/settings.json
 git commit -m "step 7 setup ($LANG)"
 git tag -f step-7-setup
 echo "Tagged: step-7-setup"
