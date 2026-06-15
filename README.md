@@ -81,6 +81,8 @@ Steps 6 and 7 introduce setup changes (config files, hook scripts) that must per
   cp harness/step-6/settings.json .claude/settings.json
   cp harness/step-6/python/.flake8 python/.flake8
   cp harness/step-6/java/checkstyle.xml java/checkstyle.xml
+  cp harness/step-6/php/phpmd.xml php/phpmd.xml
+  cp harness/step-6/typescript/.eslintrc.json typescript/.eslintrc.json
   mkdir -p .claude/hooks
   cp harness/step-6/.claude/hooks/*.sh .claude/hooks/
   chmod +x .claude/hooks/*.sh
@@ -116,11 +118,20 @@ Steps 6 and 7 introduce setup changes (config files, hook scripts) that must per
 
   Enable the agent to run the app in debug mode, introduce a bug, ask the agent to diagnose and fix it, and then extract that debugging workflow into a reusable skill added to the repository.
 
+
 ## Quality tools by language
 
 ### Python
 
 Configured in `harness/step-6/.claude/hooks/check-quality.sh`. Checks: function length (30), cognitive complexity (10), magic numbers, string constant overuse, class instance attributes (6), file length (150 lines), max parameters (4). The flake8 config is in `harness/step-6/python/.flake8`. Both are copied into place when activating step 6 (see step 6 instructions above).
+
+### PHP
+
+Uses [PHPMD](https://phpmd.org/) (PHP Mess Detector). Checks: cyclomatic complexity (10), method length (30 lines), class length (150 lines), class fields (6), parameter count (4). The ruleset is in `harness/step-6/php/phpmd.xml` — copied to `php/phpmd.xml` when activating step 6. Requires `composer install` in `php/`.
+
+### TypeScript
+
+Uses [ESLint](https://eslint.org/) with `@typescript-eslint`. Checks: cyclomatic complexity (10), function length (30 lines), file length (150 lines), parameter count (4). The config is in `harness/step-6/typescript/.eslintrc.json` — copied to `typescript/.eslintrc.json` when activating step 6. Requires `pnpm install` in `typescript/`.
 
 ### Java
 

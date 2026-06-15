@@ -1,27 +1,27 @@
 #!/bin/bash
-# Runs quality checks on python/src and outputs violations.
+# Runs quality checks on python/, php/, and typescript/src.
 # Exit 0 = pass, exit 1 = violations found (with details on stdout).
 
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-cd "$ROOT/python" 2>/dev/null || exit 0
-
 VIOLATIONS=""
 
-# 1. flake8 checks (function length, complexity, magic numbers, class attrs, etc.)
-FLAKE=$(flake8 src/ 2>&1)
-[ -n "$FLAKE" ] && VIOLATIONS+="$FLAKE"$'\n'
+# ===================== Python =====================
+if [ -d "$ROOT/python/src" ]; then
+  cd "$ROOT/python" || exit 0
 
-# 2. File length check (max 150 lines per file)
-while IFS= read -r f; do
-  LINES=$(wc -l < "$f")
-  if [ "$LINES" -gt 150 ]; then
-    VIOLATIONS+="$f:1:1: FILE-LENGTH File has $LINES lines (max 150)"$'\n'
+  if command -v flake8 >/dev/null 2>&1; then
+    FLAKE=$(flake8 src/ 2>&1)
+    [ -n "$FLAKE" ] && VIOLATIONS+="$FLAKE"$'\n'
   fi
-done < <(find src/ -name "*.py" ! -name "__init__.py")
 
-# 3. Class instance attribute count (max 6, including private)
-#    WPS230 only counts public attrs - this catches all self.* assignments in __init__
-ATTR_CHECK=$(python3 -c "
+  while IFS= read -r f; do
+    LINES=$(wc -l < "$f")
+    if [ "$LINES" -gt 150 ]; then
+      VIOLATIONS+="$f:1:1: FILE-LENGTH File has $LINES lines (max 150)"$'\n'
+    fi
+  done < <(find src/ -name "*.py" ! -name "__init__.py")
+
+  ATTR_CHECK=$(python3 -c "
 import ast, sys, os
 max_attrs = 6
 for root, dirs, files in os.walk('src'):
@@ -49,7 +49,42 @@ for root, dirs, files in os.walk('src'):
             if len(init_attrs) > max_attrs:
                 print(f'{path}:{node.lineno}:1: CLASS-ATTRS Class {node.name} has {len(init_attrs)} instance attributes (max {max_attrs}): {sorted(init_attrs)}')
 " 2>&1)
-[ -n "$ATTR_CHECK" ] && VIOLATIONS+="$ATTR_CHECK"$'\n'
+  [ -n "$ATTR_CHECK" ] && VIOLATIONS+="$ATTR_CHECK"$'\n'
+fi
+
+# ===================== PHP =====================
+if [ -d "$ROOT/php/src" ]; then
+  cd "$ROOT/php" || true
+
+  if [ -f phpmd.xml ] && [ -x vendor/bin/phpmd ]; then
+    PHPMD=$(vendor/bin/phpmd src text phpmd.xml 2>/dev/null | grep -v "^Deprecated:" | grep -v "^$")
+    [ -n "$PHPMD" ] && VIOLATIONS+="$PHPMD"$'\n'
+  fi
+
+  while IFS= read -r f; do
+    LINES=$(wc -l < "$f")
+    if [ "$LINES" -gt 150 ]; then
+      VIOLATIONS+="$f:1:1: FILE-LENGTH File has $LINES lines (max 150)"$'\n'
+    fi
+  done < <(find src/ -name "*.php")
+fi
+
+# ===================== TypeScript =====================
+if [ -d "$ROOT/typescript/src" ]; then
+  cd "$ROOT/typescript" || true
+
+  if [ -x node_modules/.bin/eslint ] && [ -f .eslintrc.json ]; then
+    ESLINT=$(node_modules/.bin/eslint src/ --ext .ts 2>&1)
+    [ -n "$ESLINT" ] && VIOLATIONS+="$ESLINT"$'\n'
+  fi
+
+  while IFS= read -r f; do
+    LINES=$(wc -l < "$f")
+    if [ "$LINES" -gt 150 ]; then
+      VIOLATIONS+="$f:1:1: FILE-LENGTH File has $LINES lines (max 150)"$'\n'
+    fi
+  done < <(find src/ -name "*.ts" ! -name "*.d.ts")
+fi
 
 if [ -n "$VIOLATIONS" ]; then
   echo "$VIOLATIONS"

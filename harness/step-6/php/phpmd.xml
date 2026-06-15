@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ruleset name="kata-quality"
+    xmlns="http://pmd.sf.net/ruleset/1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
+    xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
+
+    <description>Kata quality rules — mirrors the Python flake8 thresholds.</description>
+
+    <!-- Flag methods with cyclomatic complexity > 10 -->
+    <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
+        <properties>
+            <property name="minimum" value="11"/>
+        </properties>
+    </rule>
+
+    <!-- Flag methods longer than 30 lines -->
+    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="31"/>
+        </properties>
+    </rule>
+
+    <!-- Flag classes longer than 150 lines -->
+    <rule ref="rulesets/codesize.xml/ExcessiveClassLength">
+        <properties>
+            <property name="minimum" value="151"/>
+        </properties>
+    </rule>
+
+    <!-- Flag classes with more than 6 fields -->
+    <rule ref="rulesets/codesize.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="6"/>
+        </properties>
+    </rule>
+
+    <!-- Flag methods with more than 4 parameters -->
+    <rule ref="rulesets/codesize.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="5"/>
+        </properties>
+    </rule>
+
+</ruleset>
