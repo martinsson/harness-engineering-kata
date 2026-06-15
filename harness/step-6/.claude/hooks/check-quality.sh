@@ -1,12 +1,13 @@
 #!/bin/bash
-# Runs quality checks on python/, php/, and typescript/src.
+# Runs quality checks for each language whose config file is present.
+# Presence of the config (e.g. python/.flake8, php/phpmd.xml) is the opt-in signal.
 # Exit 0 = pass, exit 1 = violations found (with details on stdout).
 
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 VIOLATIONS=""
 
 # ===================== Python =====================
-if [ -d "$ROOT/python/src" ]; then
+if [ -d "$ROOT/python/src" ] && [ -f "$ROOT/python/.flake8" ]; then
   cd "$ROOT/python" || exit 0
 
   if command -v flake8 >/dev/null 2>&1; then
@@ -53,10 +54,10 @@ for root, dirs, files in os.walk('src'):
 fi
 
 # ===================== PHP =====================
-if [ -d "$ROOT/php/src" ]; then
+if [ -d "$ROOT/php/src" ] && [ -f "$ROOT/php/phpmd.xml" ]; then
   cd "$ROOT/php" || true
 
-  if [ -f phpmd.xml ] && [ -x vendor/bin/phpmd ]; then
+  if [ -x vendor/bin/phpmd ]; then
     PHPMD=$(vendor/bin/phpmd src text phpmd.xml 2>/dev/null | grep -v "^Deprecated:" | grep -v "^$")
     [ -n "$PHPMD" ] && VIOLATIONS+="$PHPMD"$'\n'
   fi
@@ -70,10 +71,10 @@ if [ -d "$ROOT/php/src" ]; then
 fi
 
 # ===================== TypeScript =====================
-if [ -d "$ROOT/typescript/src" ]; then
+if [ -d "$ROOT/typescript/src" ] && [ -f "$ROOT/typescript/.eslintrc.json" ]; then
   cd "$ROOT/typescript" || true
 
-  if [ -x node_modules/.bin/eslint ] && [ -f .eslintrc.json ]; then
+  if [ -x node_modules/.bin/eslint ]; then
     ESLINT=$(node_modules/.bin/eslint src/ --ext .ts 2>&1)
     [ -n "$ESLINT" ] && VIOLATIONS+="$ESLINT"$'\n'
   fi
