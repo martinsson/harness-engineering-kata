@@ -6,8 +6,8 @@ This directory contains skills for coding agents working on this project.
 
 ```
 .agents/
-├── README.md          (this file)
 └── skills/
+    ├── README.md      (this file)
     ├── unit-test-design/
     │   ├── SKILL.md   (main skill definition)
     │   └── [additional resources]
