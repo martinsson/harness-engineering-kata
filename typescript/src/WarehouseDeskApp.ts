@@ -1,3 +1,9 @@
+export interface SeedItem {
+    sku: string;
+    price: number;
+    stock: number;
+}
+
 export class WarehouseDeskApp {
     private stockBySku: Map<string, number> = new Map();
     private reservedBySku: Map<string, number> = new Map();
@@ -9,46 +15,51 @@ export class WarehouseDeskApp {
     private cashBalance: number = 0;
     private nextOrderNumber: number = 0;
 
-    public seedData(): void {
-        this.stockBySku.set("PEN-BLACK", 40);
-        this.stockBySku.set("PEN-BLUE", 25);
-        this.stockBySku.set("NOTE-A5", 15);
-        this.stockBySku.set("STAPLER", 4);
+    public seedData(items: SeedItem[], startingCash: number, startingOrderNumber: number): void {
+        this.stockBySku.clear();
+        this.reservedBySku.clear();
+        this.priceBySku.clear();
+        this.orderStatus.clear();
+        this.orderSku.clear();
+        this.orderQty.clear();
+        this.eventLog = [];
 
-        this.reservedBySku.set("PEN-BLACK", 0);
-        this.reservedBySku.set("PEN-BLUE", 0);
-        this.reservedBySku.set("NOTE-A5", 0);
-        this.reservedBySku.set("STAPLER", 0);
+        const seenSkus: Set<string> = new Set();
+        for (const item of items) {
+            if (item === null || item === undefined) {
+                throw new Error("seed item cannot be null");
+            }
+            const sku = item.sku.trim();
+            if (sku === "") {
+                throw new Error("sku cannot be blank");
+            }
+            if (item.price < 0) {
+                throw new Error("price cannot be negative for " + sku);
+            }
+            if (item.stock < 0) {
+                throw new Error("stock cannot be negative for " + sku);
+            }
+            if (seenSkus.has(sku)) {
+                throw new Error("duplicate sku in seed data: " + sku);
+            }
+            seenSkus.add(sku);
 
-        this.priceBySku.set("PEN-BLACK", 1.5);
-        this.priceBySku.set("PEN-BLUE", 1.6);
-        this.priceBySku.set("NOTE-A5", 4.0);
-        this.priceBySku.set("STAPLER", 12.0);
+            this.stockBySku.set(sku, item.stock);
+            this.priceBySku.set(sku, item.price);
+            this.reservedBySku.set(sku, 0);
+        }
 
-        this.cashBalance = 300.0;
-        this.nextOrderNumber = 1001;
+        this.cashBalance = startingCash;
+        this.nextOrderNumber = startingOrderNumber;
     }
 
-    public runDemoDay(): void {
-        const commands = [
-            "RECV;NOTE-A5;5;2.20",
-            "SELL;alice;PEN-BLACK;10",
-            "SELL;bob;STAPLER;5",
-            "CANCEL;O1002",
-            "COUNT;STAPLER",
-            "SELL;carol;STAPLER;2",
-            "SELL;dan;NOTE-A5;14",
-            "COUNT;NOTE-A5",
-            "DUMP"
-        ];
-
+    public process(commands: string[]): void {
         for (const command of commands) {
             this.processLine(command);
         }
-        this.printEndOfDayReport();
     }
 
-    public processLine(line: string): void {
+    private processLine(line: string): void {
         const parts = line.split(";");
         const type = parts[0];
 
@@ -59,7 +70,7 @@ export class WarehouseDeskApp {
             const current = this.stockBySku.get(sku) || 0;
             this.stockBySku.set(sku, current + qty);
             this.cashBalance = this.cashBalance - (qty * unitCost);
-            this.eventLog.push(`received ${qty} of ${sku} at ${unitCost}`);
+            this.eventLog.push(`received ${qty} of ${sku} at ${this.formatDouble(unitCost)}`);
             return;
         }
 
@@ -84,7 +95,7 @@ export class WarehouseDeskApp {
                 const orderTotal = unitPrice * qty;
                 this.cashBalance = this.cashBalance + orderTotal;
                 this.orderStatus.set(orderId, "SHIPPED");
-                this.eventLog.push(`order ${orderId} shipped to ${customer} amount=${orderTotal}`);
+                this.eventLog.push(`order ${orderId} shipped to ${customer} amount=${this.formatDouble(orderTotal)}`);
             }
             return;
         }
@@ -104,11 +115,11 @@ export class WarehouseDeskApp {
             }
 
             if (status === "SHIPPED") {
-                const sku = this.orderSku.get(orderId);
+                const sku = this.orderSku.get(orderId)!;
                 const qty = this.orderQty.get(orderId) || 0;
-                const current = this.stockBySku.get(sku || "") || 0;
-                this.stockBySku.set(sku || "", current + qty);
-                const unitPrice = this.priceBySku.get(sku || "") || 0.0;
+                const current = this.stockBySku.get(sku) || 0;
+                this.stockBySku.set(sku, current + qty);
+                const unitPrice = this.priceBySku.get(sku) || 0.0;
                 this.cashBalance = this.cashBalance - (unitPrice * qty);
                 this.orderStatus.set(orderId, "CANCELLED_AFTER_SHIP");
                 this.eventLog.push(`cancelled shipped order ${orderId} with restock`);
@@ -148,6 +159,11 @@ export class WarehouseDeskApp {
         return parseFloat(value.trim());
     }
 
+    private formatDouble(value: number): string {
+        const s = value.toString();
+        return s.includes('.') ? s : s + '.0';
+    }
+
     private mapToString(map: Map<string, any>): string {
         const obj: { [key: string]: any } = {};
         map.forEach((value, key) => {
@@ -180,15 +196,15 @@ export class WarehouseDeskApp {
 
         console.log();
         console.log("==== end of day ====");
-        console.log("orders shipped:", shipped);
-        console.log("orders backordered:", backorder);
-        console.log("orders cancelled:", cancelled);
-        console.log("cash balance:", this.cashBalance.toFixed(2));
-        console.log("low stock skus:", lowStock);
+        console.log(`orders shipped: ${shipped}`);
+        console.log(`orders backordered: ${backorder}`);
+        console.log(`orders cancelled: ${cancelled}`);
+        console.log(`cash balance: ${this.cashBalance.toFixed(2)}`);
+        console.log(`low stock skus: [${lowStock.join(", ")}]`);
         console.log();
         console.log("events:");
         for (const event of this.eventLog) {
-            console.log(" -", event);
+            console.log(` - ${event}`);
         }
     }
 }
