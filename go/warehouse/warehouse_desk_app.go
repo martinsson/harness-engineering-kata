@@ -156,9 +156,9 @@ func (app *WarehouseDeskApp) processLine(line string) {
 
 	if cmd == "DUMP" {
 		fmt.Println("---- dump ----")
-		fmt.Printf("stock=%s\n", formatIntMap(app.stockBySku))
-		fmt.Printf("reserved=%s\n", formatIntMap(app.reservedBySku))
-		fmt.Printf("orders=%s\n", formatStringMap(app.orderStatus))
+		fmt.Printf("stock=%v\n", app.stockBySku)
+		fmt.Printf("reserved=%v\n", app.reservedBySku)
+		fmt.Printf("orders=%v\n", app.orderStatus)
 		fmt.Printf("cashBalance=%s\n", formatFloat(app.cashBalance))
 		return
 	}
@@ -188,32 +188,6 @@ func formatFloat(v float64) string {
 		s += ".0"
 	}
 	return s
-}
-
-func formatIntMap(m map[string]int) string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	parts := make([]string, 0, len(keys))
-	for _, k := range keys {
-		parts = append(parts, fmt.Sprintf("%s=%d", k, m[k]))
-	}
-	return "{" + strings.Join(parts, ", ") + "}"
-}
-
-func formatStringMap(m map[string]string) string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	parts := make([]string, 0, len(keys))
-	for _, k := range keys {
-		parts = append(parts, fmt.Sprintf("%s=%s", k, m[k]))
-	}
-	return "{" + strings.Join(parts, ", ") + "}"
 }
 
 func (app *WarehouseDeskApp) PrintEndOfDayReport() {
