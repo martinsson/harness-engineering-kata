@@ -8,6 +8,7 @@ Type IntegerDict
         count As Integer
 
         Declare Constructor()
+        Declare Sub Clear()
         Declare Sub Set(key As String, value As Integer)
         Declare Function Get(key As String, defaultValue As Integer) As Integer
         Declare Sub PrintKeyValues()
@@ -16,6 +17,10 @@ End Type
 Constructor IntegerDict()
     count = 0
 End Constructor
+
+Sub IntegerDict.Clear()
+    count = 0
+End Sub
 
 Sub IntegerDict.Set(key As String, value As Integer)
     Dim i As Integer
@@ -44,11 +49,14 @@ Function IntegerDict.Get(key As String, defaultValue As Integer) As Integer
 End Function
 
 Sub IntegerDict.PrintKeyValues()
+    Dim s As String = "{"
     Dim i As Integer
     For i = 0 To count - 1
-        Print keys(i) + "=" + Str(values(i)) + " ";
+        If i > 0 Then s = s + ", "
+        s = s + keys(i) + "=" + Str(values(i))
     Next i
-    Print
+    s = s + "}"
+    Print s
 End Sub
 
 Type DoubleDict
@@ -60,6 +68,7 @@ Type DoubleDict
 
     public:
         Declare Constructor()
+        Declare Sub Clear()
         Declare Sub Set(key As String, value As Double)
         Declare Function Get(key As String, defaultValue As Double) As Double
         Declare Sub PrintKeyValues()
@@ -68,6 +77,10 @@ End Type
 Constructor DoubleDict()
     count = 0
 End Constructor
+
+Sub DoubleDict.Clear()
+    count = 0
+End Sub
 
 Sub DoubleDict.Set(key As String, value As Double)
     Dim i As Integer
@@ -96,11 +109,14 @@ Function DoubleDict.Get(key As String, defaultValue As Double) As Double
 End Function
 
 Sub DoubleDict.PrintKeyValues()
+    Dim s As String = "{"
     Dim i As Integer
     For i = 0 To count - 1
-        Print keys(i) + "=" + Str(values(i)) + " ";
+        If i > 0 Then s = s + ", "
+        s = s + keys(i) + "=" + Str(values(i))
     Next i
-    Print
+    s = s + "}"
+    Print s
 End Sub
 
 Type StringDict
@@ -112,6 +128,7 @@ Type StringDict
         count As Integer
 
         Declare Constructor()
+        Declare Sub Clear()
         Declare Sub Set(key As String, value As String)
         Declare Function Get(key As String, defaultValue As String) As String
         Declare Sub PrintKeyValues()
@@ -120,6 +137,10 @@ End Type
 Constructor StringDict()
     count = 0
 End Constructor
+
+Sub StringDict.Clear()
+    count = 0
+End Sub
 
 Sub StringDict.Set(key As String, value As String)
     Dim i As Integer
@@ -148,9 +169,12 @@ Function StringDict.Get(key As String, defaultValue As String) As String
 End Function
 
 Sub StringDict.PrintKeyValues()
+    Dim s As String = "{"
     Dim i As Integer
     For i = 0 To count - 1
-        Print keys(i) + "=" + values(i) + " ";
+        If i > 0 Then s = s + ", "
+        s = s + keys(i) + "=" + values(i)
     Next i
-    Print
+    s = s + "}"
+    Print s
 End Sub
