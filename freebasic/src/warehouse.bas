@@ -1,6 +1,12 @@
 #include "dict.bas"
 #include "list.bas"
 
+Type SeedItem
+    sku As String
+    price As Double
+    stock As Integer
+End Type
+
 Type WarehouseDeskApp
     private:
         stock As IntegerDict
@@ -14,51 +20,63 @@ Type WarehouseDeskApp
         nextOrderNumber As Integer
 
     public:
-        Declare Sub SeedData()
+        Declare Sub SeedData(items() As SeedItem, startingCash As Double, startingOrderNumber As Integer)
+        Declare Sub Process(commands() As String)
+
+    private:
         Declare Sub ProcessLine(cmdLine As String)
-        Declare Sub PrintEndOfDayReport()
-        Declare Sub RunDemoDay()
         Declare Function Split(text As String, delimiter As String) As StringList
+
+    public:
+        Declare Sub PrintEndOfDayReport()
 End Type
 
-Sub WarehouseDeskApp.SeedData()
-    stock.Set("PEN-BLACK", 40)
-    stock.Set("PEN-BLUE", 25)
-    stock.Set("NOTE-A5", 15)
-    stock.Set("STAPLER", 4)
+Sub WarehouseDeskApp.SeedData(items() As SeedItem, startingCash As Double, startingOrderNumber As Integer)
+    stock.Clear()
+    reserved.Clear()
+    price.Clear()
+    orderStatus.Clear()
+    orderSku.Clear()
+    orderQty.Clear()
+    eventLog.Clear()
 
-    reserved.Set("PEN-BLACK", 0)
-    reserved.Set("PEN-BLUE", 0)
-    reserved.Set("NOTE-A5", 0)
-    reserved.Set("STAPLER", 0)
+    Dim seenSkus As StringList
+    Dim i As Integer
+    For i = LBound(items) To UBound(items)
+        Dim sku As String = Trim(items(i).sku)
+        If sku = "" Then
+            Print "sku cannot be blank"
+            End
+        End If
+        If items(i).price < 0 Then
+            Print "price cannot be negative for " + sku
+            End
+        End If
+        If items(i).stock < 0 Then
+            Print "stock cannot be negative for " + sku
+            End
+        End If
+        If seenSkus.Contains(sku) Then
+            Print "duplicate sku in seed data: " + sku
+            End
+        End If
+        seenSkus.Add(sku)
 
-    price.Set("PEN-BLACK", 1.5)
-    price.Set("PEN-BLUE", 1.6)
-    price.Set("NOTE-A5", 4.0)
-    price.Set("STAPLER", 12.0)
+        stock.Set(sku, items(i).stock)
+        price.Set(sku, items(i).price)
+        reserved.Set(sku, 0)
+    Next i
 
-    cashBalance = 300.0
-    nextOrderNumber = 1001
+    cashBalance = startingCash
+    nextOrderNumber = startingOrderNumber
 End Sub
 
-Function WarehouseDeskApp.Split(text As String, delimiter As String) As StringList
+Sub WarehouseDeskApp.Process(commands() As String)
     Dim i As Integer
-    Dim tempStr As String = ""
-    Dim result As StringList
-
-    For i = 1 To Len(text)
-        Dim c As String = Mid(text, i, 1)
-        If c = delimiter Then
-            result.Add(tempStr)
-            tempStr = ""
-        Else
-            tempStr = tempStr + c
-        End If
+    For i = LBound(commands) To UBound(commands)
+        ProcessLine(commands(i))
     Next i
-    result.Add(tempStr)
-
-    Return result
-End Function
+End Sub
 
 Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     Dim parts As StringList = Split(cmdLine, ";")
@@ -156,6 +174,25 @@ Sub WarehouseDeskApp.ProcessLine(cmdLine As String)
     eventLog.Add("unknown command: " + cmdLine)
 End Sub
 
+Function WarehouseDeskApp.Split(text As String, delimiter As String) As StringList
+    Dim i As Integer
+    Dim tempStr As String = ""
+    Dim result As StringList
+
+    For i = 1 To Len(text)
+        Dim c As String = Mid(text, i, 1)
+        If c = delimiter Then
+            result.Add(tempStr)
+            tempStr = ""
+        Else
+            tempStr = tempStr + c
+        End If
+    Next i
+    result.Add(tempStr)
+
+    Return result
+End Function
+
 Sub WarehouseDeskApp.PrintEndOfDayReport()
     Dim i As Integer
     Dim shipped As Integer = 0
@@ -192,25 +229,3 @@ Sub WarehouseDeskApp.PrintEndOfDayReport()
     Print "events:"
     eventLog.PrintItems()
 End Sub
-
-Sub WarehouseDeskApp.RunDemoDay()
-    Dim commands(10) As String
-    Dim commandCount As Integer = 9
-
-    commands(0) = "RECV;NOTE-A5;5;2.20"
-    commands(1) = "SELL;alice;PEN-BLACK;10"
-    commands(2) = "SELL;bob;STAPLER;5"
-    commands(3) = "CANCEL;O1002"
-    commands(4) = "COUNT;STAPLER"
-    commands(5) = "SELL;carol;STAPLER;2"
-    commands(6) = "SELL;dan;NOTE-A5;14"
-    commands(7) = "COUNT;NOTE-A5"
-    commands(8) = "DUMP"
-
-    Dim i As Integer
-    For i = 0 To commandCount - 1
-        ProcessLine(commands(i))
-    Next i
-    PrintEndOfDayReport()
-End Sub
-
