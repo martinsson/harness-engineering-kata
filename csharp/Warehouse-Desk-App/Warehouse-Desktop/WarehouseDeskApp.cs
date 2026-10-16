@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Warehouse_Desktop
+namespace Samman_Coaching
 {
     public class WarehouseDeskApp
     {
@@ -164,10 +164,10 @@ namespace Warehouse_Desktop
             if ("DUMP".Equals(type))
             {
                 Console.WriteLine("---- dump ----");
-                Console.WriteLine("stock={" + string.Join(", ", stockBySku.Select(kvp => kvp.Key + "=" + kvp.Value)) + "}");
-                Console.WriteLine("reserved={" + string.Join(", ", reservedBySku.Select(kvp => kvp.Key + "=" + kvp.Value)) + "}");
-                Console.WriteLine("orders={" + string.Join(", ", orderStatus.Select(kvp => kvp.Key + "=" + kvp.Value)) + "}");
-                Console.WriteLine("cashBalance=" + cashBalance);
+                Console.WriteLine($"stock={FormatDict(stockBySku)}");
+                Console.WriteLine($"reserved={FormatDict(reservedBySku)}");
+                Console.WriteLine($"orders={FormatDict(orderStatus)}");
+                Console.WriteLine($"cashBalance={cashBalance}");
                 return;
             }
 
@@ -228,5 +228,8 @@ namespace Warehouse_Desktop
                 Console.WriteLine(" - " + @event);
             }
         }
+
+        private static string FormatDict<TK, TV>(Dictionary<TK, TV> dict) where TK : notnull =>
+            "{" + string.Join(", ", dict.Select(kvp => $"{kvp.Key}={kvp.Value}")) + "}";        
     }
 }
