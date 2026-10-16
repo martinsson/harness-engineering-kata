@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
-namespace Samman_Coaching
+namespace SammanCoaching
 {
     public class WarehouseDeskApp
     {
@@ -84,7 +85,7 @@ namespace Samman_Coaching
                 int current = stockBySku.GetValueOrDefault(sku, 0);
                 stockBySku[sku] = current + qty;
                 cashBalance = cashBalance - (qty * unitCost);
-                eventLog.Add("received " + qty + " of " + sku + " at " + unitCost);
+                eventLog.Add("received " + qty + " of " + sku + " at " + FormatDouble(unitCost));
                 return;
             }
 
@@ -113,7 +114,7 @@ namespace Samman_Coaching
                     double orderTotal = unitPrice * qty;
                     cashBalance = cashBalance + orderTotal;
                     orderStatus[orderId] = "SHIPPED";
-                    eventLog.Add("order " + orderId + " shipped to " + customer + " amount=" + orderTotal);
+                    eventLog.Add("order " + orderId + " shipped to " + customer + " amount=" + FormatDouble(orderTotal));
                 }
                 return;
             }
@@ -167,7 +168,7 @@ namespace Samman_Coaching
                 Console.WriteLine($"stock={FormatDict(stockBySku)}");
                 Console.WriteLine($"reserved={FormatDict(reservedBySku)}");
                 Console.WriteLine($"orders={FormatDict(orderStatus)}");
-                Console.WriteLine($"cashBalance={cashBalance}");
+                Console.WriteLine($"cashBalance={FormatDouble(cashBalance)}");
                 return;
             }
 
@@ -182,6 +183,12 @@ namespace Samman_Coaching
         private double ParseDouble(string value)
         {
             return double.Parse(value.Trim(), System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        private static string FormatDouble(double value)
+        {
+            string s = value.ToString(CultureInfo.InvariantCulture);
+            return s.Contains('.') ? s : s + ".0";
         }
 
         public void PrintEndOfDayReport()

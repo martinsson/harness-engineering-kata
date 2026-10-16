@@ -1,4 +1,4 @@
-using Samman_Coaching;
+using SammanCoaching;
 
 WarehouseDeskApp app = new WarehouseDeskApp();
 
