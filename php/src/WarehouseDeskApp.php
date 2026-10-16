@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Warehouse;
 
+class SeedItem
+{
+    public function __construct(
+        public string $sku,
+        public float $price,
+        public int $stock
+    ) {
+    }
+}
+
 class WarehouseDeskApp
 {
     private $stockBySku = [];
@@ -16,54 +26,54 @@ class WarehouseDeskApp
     private $cashBalance;
     private $nextOrderNumber;
 
-    public function seedData()
+    public function seedData(array $items, float $startingCash, int $startingOrderNumber)
     {
-        $this->stockBySku = [
-            "PEN-BLACK" => 40,
-            "PEN-BLUE" => 25,
-            "NOTE-A5" => 15,
-            "STAPLER" => 4
-        ];
+        $this->stockBySku = [];
+        $this->reservedBySku = [];
+        $this->priceBySku = [];
+        $this->orderStatus = [];
+        $this->orderSku = [];
+        $this->orderQty = [];
+        $this->eventLog = [];
 
-        $this->reservedBySku = [
-            "PEN-BLACK" => 0,
-            "PEN-BLUE" => 0,
-            "NOTE-A5" => 0,
-            "STAPLER" => 0
-        ];
+        $seenSkus = [];
+        foreach ($items as $item) {
+            if ($item === null) {
+                throw new \InvalidArgumentException("seed item cannot be null");
+            }
 
-        $this->priceBySku = [
-            "PEN-BLACK" => 1.5,
-            "PEN-BLUE" => 1.6,
-            "NOTE-A5" => 4.0,
-            "STAPLER" => 12.0
-        ];
+            $sku = trim($item->sku);
+            if ($sku === "") {
+                throw new \InvalidArgumentException("sku cannot be blank");
+            }
+            if ($item->price < 0) {
+                throw new \InvalidArgumentException("price cannot be negative for " . $sku);
+            }
+            if ($item->stock < 0) {
+                throw new \InvalidArgumentException("stock cannot be negative for " . $sku);
+            }
+            if (in_array($sku, $seenSkus, true)) {
+                throw new \InvalidArgumentException("duplicate sku in seed data: " . $sku);
+            }
 
-        $this->cashBalance = 300.0;
-        $this->nextOrderNumber = 1001;
+            $seenSkus[] = $sku;
+            $this->stockBySku[$sku] = $item->stock;
+            $this->reservedBySku[$sku] = 0;
+            $this->priceBySku[$sku] = $item->price;
+        }
+
+        $this->cashBalance = $startingCash;
+        $this->nextOrderNumber = $startingOrderNumber;
     }
 
-    public function runDemoDay()
+    public function process(array $commands)
     {
-        $commands = [
-            "RECV;NOTE-A5;5;2.20",
-            "SELL;alice;PEN-BLACK;10",
-            "SELL;bob;STAPLER;5",
-            "CANCEL;O1002",
-            "COUNT;STAPLER",
-            "SELL;carol;STAPLER;2",
-            "SELL;dan;NOTE-A5;14",
-            "COUNT;NOTE-A5",
-            "DUMP"
-        ];
-
         foreach ($commands as $command) {
             $this->processLine($command);
         }
-        $this->printEndOfDayReport();
     }
 
-    public function processLine($line)
+    private function processLine($line)
     {
         $parts = explode(";", $line);
         $type = $parts[0];
@@ -75,7 +85,7 @@ class WarehouseDeskApp
             $current = $this->stockBySku[$sku] ?? 0;
             $this->stockBySku[$sku] = $current + $qty;
             $this->cashBalance = $this->cashBalance - ($qty * $unitCost);
-            $this->eventLog[] = "received " . $qty . " of " . $sku . " at " . $unitCost;
+            $this->eventLog[] = "received " . $qty . " of " . $sku . " at " . $this->formatDouble($unitCost);
             return;
         }
 
@@ -100,7 +110,7 @@ class WarehouseDeskApp
                 $orderTotal = $unitPrice * $qty;
                 $this->cashBalance = $this->cashBalance + $orderTotal;
                 $this->orderStatus[$orderId] = "SHIPPED";
-                $this->eventLog[] = "order " . $orderId . " shipped to " . $customer . " amount=" . $orderTotal;
+                $this->eventLog[] = "order " . $orderId . " shipped to " . $customer . " amount=" . $this->formatDouble($orderTotal);
             }
             return;
         }
@@ -120,7 +130,7 @@ class WarehouseDeskApp
             }
 
             if ("SHIPPED" === $status) {
-                $sku = $this->orderSku[$orderId] ?? null;
+                $sku = $this->orderSku[$orderId];
                 $qty = $this->orderQty[$orderId] ?? 0;
                 $current = $this->stockBySku[$sku] ?? 0;
                 $this->stockBySku[$sku] = $current + $qty;
@@ -149,7 +159,7 @@ class WarehouseDeskApp
             echo "stock=" . $this->printMap($this->stockBySku) . "\n";
             echo "reserved=" . $this->printMap($this->reservedBySku) . "\n";
             echo "orders=" . $this->printMap($this->orderStatus) . "\n";
-            echo "cashBalance=" . $this->cashBalance . "\n";
+            echo "cashBalance=" . $this->formatDouble($this->cashBalance) . "\n";
             return;
         }
 
@@ -164,6 +174,12 @@ class WarehouseDeskApp
     private function parseDouble($value)
     {
         return floatval(trim($value));
+    }
+
+    private function formatDouble($value): string
+    {
+        $s = (string) $value;
+        return strpos($s, '.') !== false ? $s : $s . '.0';
     }
 
     private function printMap(array $map): string
@@ -203,7 +219,7 @@ class WarehouseDeskApp
         echo "orders backordered: " . $backorder . "\n";
         echo "orders cancelled: " . $cancelled . "\n";
         echo "cash balance: " . number_format($this->cashBalance, 2) . "\n";
-        echo "low stock skus: " . implode(", ", $lowStock) . "\n";
+        echo "low stock skus: [" . implode(", ", $lowStock) . "]\n";
         echo "\n";
         echo "events:\n";
         foreach ($this->eventLog as $event) {
