@@ -13,11 +13,6 @@
             "Warehouse\\": "src/"
         }
     },
-    "autoload-dev": {
-        "psr-4": {
-            "WarehouseTest\\": "tests/"
-        }
-    },
     "config": {
         "optimize-autoloader": true
     },

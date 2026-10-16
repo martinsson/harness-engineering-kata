@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Warehouse;
 
 class WarehouseDeskApp
@@ -144,9 +146,9 @@ class WarehouseDeskApp
 
         if ("DUMP" === $type) {
             echo "---- dump ----\n";
-            echo "stock=" . print_r($this->stockBySku, true) . "\n";
-            echo "reserved=" . print_r($this->reservedBySku, true) . "\n";
-            echo "orders=" . print_r($this->orderStatus, true) . "\n";
+            echo "stock=" . $this->printMap($this->stockBySku) . "\n";
+            echo "reserved=" . $this->printMap($this->reservedBySku) . "\n";
+            echo "orders=" . $this->printMap($this->orderStatus) . "\n";
             echo "cashBalance=" . $this->cashBalance . "\n";
             return;
         }
@@ -162,6 +164,15 @@ class WarehouseDeskApp
     private function parseDouble($value)
     {
         return floatval(trim($value));
+    }
+
+    private function printMap(array $map): string
+    {
+        $entries = [];
+        foreach ($map as $k => $v) {
+            $entries[] = $k . '=' . $v;
+        }
+        return '{' . implode(', ', $entries) . '}';
     }
 
     public function printEndOfDayReport()
