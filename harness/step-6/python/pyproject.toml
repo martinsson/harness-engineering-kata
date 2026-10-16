@@ -1,0 +1,34 @@
+[project]
+name = "warehouse-desk"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+test = [
+    "approvaltests>=14.0",
+    "pytest>=8.0",
+]
+lint = [
+    "mypy>=1.20.2",
+    "ruff>=0.15.12",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ANN"]
+
+[tool.mypy]
+python_version = "3.11"
+explicit_package_bases = true
+mypy_path = "."
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true

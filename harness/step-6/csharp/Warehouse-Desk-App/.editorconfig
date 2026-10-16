@@ -1,0 +1,5 @@
+root = true
+
+[*.cs]
+# Promote Roslynator's default-enabled diagnostics to build warnings.
+dotnet_analyzer_diagnostic.category-roslynator.severity = warning
