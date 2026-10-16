@@ -7,4 +7,3 @@
 3. Add command: `CONFIRM;<reservationId>` to convert reservation into a shipped order.
 4. Add command: `RELEASE;<reservationId>` to release stock manually.
 5. Reservations should expire automatically based on the configured minutes, returning stock to availability.
-
