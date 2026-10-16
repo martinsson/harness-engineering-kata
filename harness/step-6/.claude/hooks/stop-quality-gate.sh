@@ -6,7 +6,7 @@ ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 VIOLATIONS=$("$ROOT/.claude/hooks/check-quality.sh" 2>&1)
 
 if [ -n "$VIOLATIONS" ]; then
-  echo "QUALITY GATE FAILED — fix these violations before finishing:" >&2
+  echo "QUALITY GATE FAILED - fix these violations before finishing:" >&2
   echo "" >&2
   echo "$VIOLATIONS" >&2
   echo "" >&2

@@ -20,7 +20,7 @@ while IFS= read -r f; do
 done < <(find src/ -name "*.py" ! -name "__init__.py")
 
 # 3. Class instance attribute count (max 6, including private)
-#    WPS230 only counts public attrs — this catches all self.* assignments in __init__
+#    WPS230 only counts public attrs - this catches all self.* assignments in __init__
 ATTR_CHECK=$(python3 -c "
 import ast, sys, os
 max_attrs = 6

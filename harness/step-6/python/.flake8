@@ -15,7 +15,7 @@ max-arguments = 4
 max-local-variables = 7
 max-string-usages = 3
 
-# Only enable rules we care about — avoid WPS noise
+# Only enable rules we care about - avoid WPS noise
 select =
     # flake8-functions: function length, returns
     CFQ001,CFQ004,
