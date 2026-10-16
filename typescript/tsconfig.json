@@ -20,8 +20,7 @@
         "forceConsistentCasingInFileNames": true,
         "experimentalDecorators": true,
         "types": [
-            "node",
-            "jest"
+            "node"
         ],
         "typeRoots": [
             "./node_modules/@types",
@@ -29,8 +28,8 @@
         "esModuleInterop": true,
     },
     "include": [
-        "./src/**.ts",
-        "./tests/*.spec.ts"
+        "./index.ts",
+        "./src/**.ts"
     ],
     "exclude": [
         "node_modules",

@@ -141,7 +141,7 @@ export class WarehouseDeskApp {
     }
 
     private parseInt(value: string): number {
-        return parseInt(value.trim());
+        return parseInt(value.trim(), 10);
     }
 
     private parseDouble(value: string): number {
