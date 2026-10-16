@@ -1,11 +1,15 @@
-package com.kata.warehouse;
+package org.sammancoaching.warehouse;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class WarehouseDeskApp {
+    public record SeedItem(String sku, double price, int stock) {}
+
     private final Map<String, Integer> stockBySku = new HashMap<>();
     private final Map<String, Integer> reservedBySku = new HashMap<>();
     private final Map<String, Double> priceBySku = new HashMap<>();
@@ -16,46 +20,46 @@ public class WarehouseDeskApp {
     private double cashBalance;
     private int nextOrderNumber;
 
-    public void seedData() {
-        stockBySku.put("PEN-BLACK", 40);
-        stockBySku.put("PEN-BLUE", 25);
-        stockBySku.put("NOTE-A5", 15);
-        stockBySku.put("STAPLER", 4);
+    public void seedData(List<SeedItem> items, double startingCash, int startingOrderNumber) {
+        stockBySku.clear();
+        reservedBySku.clear();
+        priceBySku.clear();
 
-        reservedBySku.put("PEN-BLACK", 0);
-        reservedBySku.put("PEN-BLUE", 0);
-        reservedBySku.put("NOTE-A5", 0);
-        reservedBySku.put("STAPLER", 0);
+        Set<String> seenSkus = new HashSet<>();
+        for (SeedItem item : items) {
+            if (item == null) {
+                throw new IllegalArgumentException("seed item cannot be null");
+            }
+            String sku = item.sku().trim();
+            if (sku.isEmpty()) {
+                throw new IllegalArgumentException("sku cannot be blank");
+            }
+            if (item.price() < 0) {
+                throw new IllegalArgumentException("price cannot be negative for " + sku);
+            }
+            if (item.stock() < 0) {
+                throw new IllegalArgumentException("stock cannot be negative for " + sku);
+            }
+            if (!seenSkus.add(sku)) {
+                throw new IllegalArgumentException("duplicate sku in seed data: " + sku);
+            }
 
-        priceBySku.put("PEN-BLACK", 1.5);
-        priceBySku.put("PEN-BLUE", 1.6);
-        priceBySku.put("NOTE-A5", 4.0);
-        priceBySku.put("STAPLER", 12.0);
+            stockBySku.put(sku, item.stock());
+            priceBySku.put(sku, item.price());
+            reservedBySku.put(sku, 0);
+        }
 
-        cashBalance = 300.0;
-        nextOrderNumber = 1001;
+        cashBalance = startingCash;
+        nextOrderNumber = startingOrderNumber;
     }
 
-    public void runDemoDay() {
-        List<String> commands = List.of(
-            "RECV;NOTE-A5;5;2.20",
-            "SELL;alice;PEN-BLACK;10",
-            "SELL;bob;STAPLER;5",
-            "CANCEL;O1002",
-            "COUNT;STAPLER",
-            "SELL;carol;STAPLER;2",
-            "SELL;dan;NOTE-A5;14",
-            "COUNT;NOTE-A5",
-            "DUMP"
-        );
-
+    public void process(List<String> commands) {
         for (String command : commands) {
             processLine(command);
         }
-        printEndOfDayReport();
     }
 
-    public void processLine(String line) {
+    private void processLine(String line) {
         String[] parts = line.split(";");
         String type = parts[0];
 

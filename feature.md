@@ -1,4 +1,4 @@
-## Missing feature to implement in the kata
+## Missing feature to implement
 
 ### Feature: Stock reservation with expiry
 

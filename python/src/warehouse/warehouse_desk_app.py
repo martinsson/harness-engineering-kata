@@ -1,3 +1,14 @@
+from collections.abc import Iterable
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class SeedItem:
+    sku: str
+    price: float
+    stock: int
+
+
 class WarehouseDeskApp:
     def __init__(self):
         self._stock: dict[str, int] = {}
@@ -10,30 +21,48 @@ class WarehouseDeskApp:
         self._cash_balance: float = 0.0
         self._next_order_number: int = 1001
 
-    def seed_data(self):
-        self._stock = {"PEN-BLACK": 40, "PEN-BLUE": 25, "NOTE-A5": 15, "STAPLER": 4}
-        self._reserved = {"PEN-BLACK": 0, "PEN-BLUE": 0, "NOTE-A5": 0, "STAPLER": 0}
-        self._price = {"PEN-BLACK": 1.5, "PEN-BLUE": 1.6, "NOTE-A5": 4.0, "STAPLER": 12.0}
-        self._cash_balance = 300.0
-        self._next_order_number = 1001
+    def seed_data(
+        self,
+        items: Iterable[SeedItem],
+        starting_cash: float,
+        starting_order_number: int,
+    ):
+        self._stock.clear()
+        self._reserved.clear()
+        self._price.clear()
+        self._order_status.clear()
+        self._order_sku.clear()
+        self._order_qty.clear()
+        self._event_log.clear()
 
-    def run_demo_day(self):
-        commands = [
-            "RECV;NOTE-A5;5;2.20",
-            "SELL;alice;PEN-BLACK;10",
-            "SELL;bob;STAPLER;5",
-            "CANCEL;O1002",
-            "COUNT;STAPLER",
-            "SELL;carol;STAPLER;2",
-            "SELL;dan;NOTE-A5;14",
-            "COUNT;NOTE-A5",
-            "DUMP",
-        ]
+        seen_skus: set[str] = set()
+        for item in items:
+            if item is None:
+                raise ValueError("seed item cannot be None")
+
+            sku = item.sku.strip()
+            if not sku:
+                raise ValueError("sku cannot be blank")
+            if item.price < 0:
+                raise ValueError(f"price cannot be negative for {sku}")
+            if item.stock < 0:
+                raise ValueError(f"stock cannot be negative for {sku}")
+            if sku in seen_skus:
+                raise ValueError(f"duplicate sku in seed data: {sku}")
+
+            seen_skus.add(sku)
+            self._stock[sku] = item.stock
+            self._reserved[sku] = 0
+            self._price[sku] = item.price
+
+        self._cash_balance = starting_cash
+        self._next_order_number = starting_order_number
+
+    def process(self, commands: Iterable[str]):
         for command in commands:
-            self.process_line(command)
-        self.print_end_of_day_report()
+            self._process_line(command)
 
-    def process_line(self, line: str):
+    def _process_line(self, line: str):
         parts = line.split(";")
         cmd = parts[0]
 
