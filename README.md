@@ -1,9 +1,120 @@
 # Warehouse Desk App
 
 This repository contains the same code in different language versions. It usually works better to open the folder for the language you want to use in your IDE or editor, not this one.
-You can use this code for an exercise. See [Designing a Harness for Agentic Autonomy](https://sammancoaching.org/learning_hours/agentic_engineering/agentic_harness_part1.html).
+
+## Exercise
 
 You can use this code for an exercise. See [Designing a Harness for Agentic Autonomy](https://sammancoaching.org/learning_hours/agentic_engineering/agentic_harness_part1.html).
+
+Experiment with tweaking and tooling the harness of agents so they produce the result you want.
+
+Implement the same feature over and over again, improve the harness to make it generate better an better versions of it
+
+By harness in this context we mean whatever influences the agent's behaviour, and whatever feedback mechanisms you put in place.
+
+- the AGENTS.md / CLAUDE.md file
+- skills
+- scripts (making results predictable)
+- Architectural documents, and constraints (like arch unit)
+- Process / workflow descriptions
+- the README.md and other visible files in the root dir
+
+## Prerequisites
+
+Install quality checking tools (needed for steps 6-7):
+
+```bash
+# Python
+pip install -r python/requirements-dev.txt
+
+# Java - add checkstyle plugin to pom.xml (see "Quality tools by language" below)
+```
+
+## Claude code (Optional)
+
+For a "fresh" clade code instance, set a "new" claude config dir
+
+```bash
+export CLAUDE_CONFIG_DIR=~/.claude_hek
+```
+
+_CLAUDE_CONFIG_DIR Override the configuration directory (default: \~/.claude). All settings, credentials, session history, and plugins are stored under this path. Useful for running multiple accounts side by side: for example, alias claude-work='CLAUDE_CONFIG_DIR=\~/.claude-work claude'_ <https://code.claude.com/docs/en/env-vars>
+
+## Steps
+
+For each step, throw away all code and get back to main, use this prompt, unless instructed otherwise:
+
+    implement the feature from feature.md
+
+Steps 6 and 7 introduce setup changes (config files, hook scripts) that must persist across iterations while the agent's generated code is discarded. The workflow there is: run the `cp` commands, **commit and tag the setup**, then run the prompt. Between steps, hard-reset to the tagged setup commit - this drops the generated code while keeping the harness in place.
+
+### 1. No Harness
+
+  Start without any harness files, and do not create AGENTS.md or CLAUDE.md.
+
+### 2. Add a Minimal Agent Instruction File
+
+  Create either AGENTS.md or CLAUDE.md and add a simple instruction such as: "Add full test coverage for new features."
+
+### 3. Add Regression-Protection Guidance
+
+  Assume the agent may skip tests for existing untested code, and add an instruction like: "To protect against regressions, always add full coverage for existing code before modifying it."
+
+### 4. Refactor Until Quality Is Acceptable
+
+  Assume the initial code quality is weak, ask the agent to refactor repeatedly until you are reasonably satisfied, and then ask it to extract design principles from the conversation into a file such as
+  docs/design-principles.md.
+
+  Commit the design principles, but revert the implementation and tests before proceeding to the next step
+
+### 5. Reuse Design Principles and Retry
+
+  Reference docs/design-principles.md from AGENTS.md or CLAUDE.md, then restart from scratch and compare whether the resulting code is similar to the improved result from the first iteration.
+
+### 6. Add a Code Quality Gate via Stop Hook (Reviewer Agent)
+
+  Activate a Stop hook that spawns a reviewer sub-agent after each agent turn. The reviewer runs the quality check script, reads offending code, and decides whether to block or allow.
+
+  If you're using Copilot or OpenCode you can replace the stop hook with a pre-commit hook and ask the agent to commit to provoke the feedback loop. Ask your agent to set that up and to test that it is being triggered on a dummy change.
+
+  ```bash
+  cp harness/step-6/settings.json .claude/settings.json
+  cp harness/step-6/python/.flake8 python/.flake8
+  cp harness/step-6/java/checkstyle.xml java/checkstyle.xml
+  mkdir -p .claude/hooks
+  cp harness/step-6/.claude/hooks/*.sh .claude/hooks/
+  chmod +x .claude/hooks/*.sh
+
+  git add -A && git commit -m "step 6 setup"
+  git tag -f step-6-setup
+  ```
+
+  Restart (exit) your Claude Code / Copilot session, then run the prompt.
+
+### 7. Add a Mechanical Quality Gate via Stop Hook (Hard Block)
+
+  Replace the reviewer agent with a deterministic quality gate that runs the same checks as step 6, but enforces them via exit code 2 instead of agent judgement. Any violation blocks the agent from finishing, forcing it to iterate until the code is clean. This is the most effective technique found in the quality gate experiment (see [Discussion](#discussion)).
+
+  Start from step 6's setup - this drops the agent's generated code from step 6 but keeps the harness (`.flake8`, `checkstyle.xml`, hook scripts) in place:
+
+  ```bash
+  git reset --hard step-6-setup
+
+  cp harness/step-7/settings.json .claude/settings.json
+
+  git add -A && git commit -m "step 7 setup"
+  git tag -f step-7-setup
+  ```
+
+  Restart your Claude Code / Copilot session, then run the prompt.
+
+### 8. Add a TDD Skill Through Research and Reapplication
+
+  Ask the agent to research what TDD is and how it applies to agent workflows, explain it clearly, create a dedicated TDD skill, and then re-implement the feature using that skill.
+
+### 9. Add Debugging Capability and Extract a Skill
+
+  Enable the agent to run the app in debug mode, introduce a bug, ask the agent to diagnose and fix it, and then extract that debugging workflow into a reusable skill added to the repository.
 
 ## Quality tools by language
 
@@ -13,10 +124,9 @@ Configured in `harness/step-6/.claude/hooks/check-quality.sh`. Checks: function 
 
 ### Java
 
-Use [Checkstyle](https://checkstyle.org/) for the same checks. A starter `checkstyle.xml` covering method length, parameter count, cyclomatic complexity, magic numbers, string literals, and file length is in `harness/step-6/java/checkstyle.xml` — copied into place when activating step 6. Add the maven-checkstyle-plugin to `pom.xml` and adapt `harness/step-6/.claude/hooks/check-quality.sh` to also call `mvn -q checkstyle:check`.
+Use [Checkstyle](https://checkstyle.org/) for the same checks. A starter `checkstyle.xml` covering method length, parameter count, cyclomatic complexity, magic numbers, string literals, and file length is in `harness/step-6/java/checkstyle.xml` - copied into place when activating step 6. Add the maven-checkstyle-plugin to `pom.xml` and adapt `harness/step-6/.claude/hooks/check-quality.sh` to also call `mvn -q checkstyle:check`.
 
 [ArchUnit](https://www.archunit.org/) can additionally enforce architectural constraints (package dependencies, layer separation) as executable tests.
-
 
 ## Discussion
 
@@ -26,6 +136,6 @@ An experiment compared 6 harness techniques for making AI agents refactor proact
 
 **Techniques tested:** soft context injection (UserPromptSubmit hook), `ask`-based PreToolUse hooks (shell script and LLM agent), hard-blocking Stop hooks (shell script and LLM reviewer), and deferred enforcement (pre-commit violations log).
 
-**Key finding:** Mechanical hard blocking (Stop hook with exit code 2) is the only technique that reliably scales. Soft techniques (context injection, deferred logging) were consistently ignored. LLM-based reviewers worked partially but exercised judgment that sometimes let violations slide.
+**Key finding:** Mechanical hard blocking (Stop hook with exit code 2) is the only technique that reliably scales. Soft techniques (context injection, deferred logging) were consistently ignored. LLM-based reviewers worked partially but exercised judgement that sometimes let violations slide.
 
-**Conclusion:** The agent doesn't need to understand *why* it should refactor. It needs to be mechanically prevented from finishing until the code is clean. Understanding is optional; enforcement is not.
+**Conclusion:** The agent doesn't need to understand _why_ it should refactor. It needs to be mechanically prevented from finishing until the code is clean. Understanding is optional; enforcement is not.
