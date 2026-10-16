@@ -24,6 +24,10 @@ public class WarehouseDeskApp {
         stockBySku.clear();
         reservedBySku.clear();
         priceBySku.clear();
+        orderStatus.clear();
+        orderSku.clear();
+        orderQty.clear();
+        eventLog.clear();
 
         Set<String> seenSkus = new HashSet<>();
         for (SeedItem item : items) {
